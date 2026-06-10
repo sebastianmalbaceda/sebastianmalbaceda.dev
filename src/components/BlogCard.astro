@@ -1,0 +1,56 @@
+---
+import type { CollectionEntry } from "astro:content";
+
+export interface Props {
+    post: CollectionEntry<"blog">;
+    index: number;
+}
+
+const { post, index } = Astro.props;
+const { data, slug } = post;
+---
+
+<a
+    href={`/blog/${slug}/`}
+    class={`glass rounded-xl overflow-hidden card-hover animated-border block group reveal reveal-delay-${(index % 6) + 1}`}
+    style={`animation-delay: ${index * 100}ms`}
+>
+    <div class="p-6 md:p-8">
+        <!-- Category & Date -->
+        <div class="flex items-center gap-3 text-xs text-zinc-500 mb-3">
+            <span class="tech-badge">{data.category}</span>
+            <span
+                >{
+                    new Date(data.pubDate).toLocaleDateString("es-ES", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    })
+                }</span
+            >
+        </div>
+
+        <!-- Title -->
+        <h3
+            class="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-primary-400 transition-colors line-clamp-2"
+        >
+            {data.title}
+        </h3>
+
+        <!-- Description -->
+        <p class="text-sm text-zinc-400 leading-relaxed line-clamp-2 mb-4">
+            {data.description}
+        </p>
+
+        <!-- Tags -->
+        <div class="flex flex-wrap gap-1.5">
+            {
+                data.tags
+                    .slice(0, 3)
+                    .map((tag) => (
+                        <span class="text-xs text-zinc-600">#{tag}</span>
+                    ))
+            }
+        </div>
+    </div>
+</a>

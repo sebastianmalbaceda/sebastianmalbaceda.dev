@@ -1,0 +1,122 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Navbar from "../../components/Navbar.astro";
+import Footer from "../../components/Footer.astro";
+import SectionTitle from "../../components/SectionTitle.astro";
+import BlogCard from "../../components/BlogCard.astro";
+import { getCollection } from "astro:content";
+
+const blogPosts = await getCollection("blog", ({ data }) => !data.draft);
+const sortedPosts = blogPosts.sort(
+    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+);
+const categories = [...new Set(sortedPosts.map((p) => p.data.category))];
+---
+
+<BaseLayout
+    title="Blog | Sebastián Malbaceda Leyva"
+    description="Artículos sobre inteligencia artificial, desarrollo de software, visión por computador y tecnología."
+>
+    <Navbar currentPath="/blog" />
+
+    <main class="pt-24 section-padding min-h-screen">
+        <div class="section-container">
+            <SectionTitle
+                title="Blog"
+                subtitle="Reflexiones, tutoriales y aprendizajes sobre tecnología, programación e inteligencia artificial."
+            />
+
+            <!-- Categories filter -->
+            <div
+                class="flex flex-wrap justify-center gap-2 mb-12"
+                id="blog-categories"
+            >
+                <button
+                    data-category="all"
+                    class="px-4 py-2 text-sm rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20 font-medium transition-colors hover:bg-primary-500/20"
+                >
+                    Todos
+                </button>
+                {
+                    categories.map((cat) => (
+                        <button
+                            data-category={cat}
+                            class="px-4 py-2 text-sm rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors"
+                        >
+                            {cat}
+                        </button>
+                    ))
+                }
+            </div>
+
+            <!-- Posts grid -->
+            {
+                sortedPosts.length > 0 ? (
+                    <div
+                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                        id="blog-posts"
+                    >
+                        {sortedPosts.map((post, i) => (
+                            <div data-category={post.data.category}>
+                                <BlogCard post={post} index={i} />
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div class="text-center py-20">
+                        <p class="text-zinc-500 text-lg">
+                            No hay artículos publicados todavía.
+                        </p>
+                        <p class="text-zinc-600 text-sm mt-2">
+                            Vuelve pronto para ver nuevos contenidos.
+                        </p>
+                    </div>
+                )
+            }
+        </div>
+    </main>
+
+    <Footer />
+</BaseLayout>
+
+<script>
+    const buttons = document.querySelectorAll(
+        "#blog-categories button[data-category]",
+    );
+    const posts = document.querySelectorAll("#blog-posts [data-category]");
+
+    function filterPosts(category) {
+        buttons.forEach((btn) => {
+            const isActive = btn.dataset.category === category;
+            btn.className = isActive
+                ? "px-4 py-2 text-sm rounded-full bg-primary-500/10 text-primary-300 border border-primary-500/20 font-medium transition-colors"
+                : "px-4 py-2 text-sm rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors";
+        });
+
+        posts.forEach((post) => {
+            post.style.display =
+                category === "all" || post.dataset.category === category
+                    ? ""
+                    : "none";
+        });
+    }
+
+    // Handle URL query params on load
+    const params = new URLSearchParams(window.location.search);
+    const initialCategory = params.get("category") || "all";
+    filterPosts(initialCategory);
+
+    buttons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            const category = btn.dataset.category || "all";
+            const url = new URL(window.location);
+            if (category === "all") {
+                url.searchParams.delete("category");
+            } else {
+                url.searchParams.set("category", category);
+            }
+            window.history.pushState({}, "", url);
+            filterPosts(category);
+        });
+    });
+</script>

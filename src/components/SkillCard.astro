@@ -1,0 +1,27 @@
+---
+import type { SkillCategory } from "../data/site";
+
+export interface Props {
+    category: SkillCategory;
+    index: number;
+}
+
+const { category, index } = Astro.props;
+---
+
+<div
+    class="glass glass-hover rounded-xl p-6 card-hover reveal reveal-delay-${(index % 6) + 1}"
+    style={`transition-delay: ${index * 100}ms`}
+>
+    <div class="flex items-center gap-3 mb-4">
+        <span class="text-2xl">{category.icon}</span>
+        <h3 class="text-lg font-semibold text-zinc-100">{category.title}</h3>
+    </div>
+    <div class="flex flex-wrap gap-2">
+        {
+            category.skills.map((skill) => (
+                <span class="tech-badge">{skill}</span>
+            ))
+        }
+    </div>
+</div>
