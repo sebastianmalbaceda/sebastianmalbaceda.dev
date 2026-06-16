@@ -9,107 +9,187 @@ export interface Props {
 
 const { project, index, large = false } = Astro.props;
 
-const statusColors: Record<string, string> = {
-    completed: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    "in-progress": "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    maintained: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+const statusColors: Record<Project["status"], string> = {
+    completed: "text-emerald-300 bg-emerald-500/10 border-emerald-500/25",
+    "in-progress": "text-amber-300 bg-amber-500/10 border-amber-500/25",
+    maintained: "text-blue-300 bg-blue-500/10 border-blue-500/25",
 };
 
-const statusLabels: Record<string, string> = {
+const statusLabels: Record<Project["status"], string> = {
     completed: "Completado",
     "in-progress": "En desarrollo",
     maintained: "Mantenido",
 };
+
+const delayClass = `reveal-delay-${(index % 6) + 1}`;
+const formattedIndex = String(index + 1).padStart(2, "0");
 ---
 
-<div
-    class={`glass rounded-xl overflow-hidden card-hover animated-border group reveal reveal-delay-${(index % 6) + 1} ${large ? "bento-lg" : ""}`}
-    style={`transition-delay: ${index * 100}ms`}
+<article
+    class={`group relative flex flex-col h-full reveal ${delayClass} ${large ? "sm:col-span-2 lg:col-span-2" : ""}`}
+    style={`transition-delay: ${index * 80}ms`}
+    data-cursor={project.github ? "Ver →" : "Detalles"}
 >
-    <div class="p-6 md:p-8">
-        <!-- Status badge -->
-        <div class="flex items-center justify-between mb-4">
+    <!-- Decorative cover (top) -->
+    <div
+        class={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${project.cover.gradient} ${large ? "aspect-[21/9]" : "aspect-[16/10]"} mb-5 spotlight shrink-0`}
+        aria-hidden="true"
+    >
+        <!-- Pattern overlay -->
+        <div
+            class="absolute inset-0 opacity-[0.18]"
+            style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0); background-size: 18px 18px;"
+        ></div>
+        <!-- Diagonal sheen -->
+        <div
+            class="absolute inset-0 bg-gradient-to-tr from-black/40 via-transparent to-white/10"
+        ></div>
+        <!-- Big glyph -->
+        <div
+            class={`absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 ${large ? "text-[10rem] sm:text-[14rem]" : "text-[7rem] sm:text-[9rem]"} font-display font-bold text-white/10 select-none transition-transform duration-700 group-hover:scale-110 group-hover:rotate-6`}
+        >
+            {project.cover.glyph}
+        </div>
+        <!-- Top-left index/year -->
+        <div class="absolute top-3 left-3 flex items-center gap-1.5 font-mono text-[10px]">
             <span
-                class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[project.status] || statusColors["in-progress"]}`}
+                class="px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-sm text-white/90 border border-white/10 tracking-wider"
             >
-                <span
-                    class={`w-1.5 h-1.5 rounded-full mr-1.5 ${project.status === "completed" ? "bg-emerald-400" : "bg-amber-400"}`}
-                ></span>
-                {statusLabels[project.status] || project.status}
+                {formattedIndex}
+            </span>
+            <span
+                class="px-1.5 py-0.5 rounded bg-black/40 backdrop-blur-sm text-white/70 border border-white/10"
+            >
+                {project.year}
+            </span>
+        </div>
+        <!-- Hover: arrow -->
+        <div
+            class="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-white"
+            >
+                <path d="M7 17 17 7"></path>
+                <path d="M7 7h10v10"></path>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="px-1 flex flex-col flex-1">
+        <div class="flex flex-wrap items-center gap-2 mb-3">
+            <span
+                class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border ${statusColors[project.status]}`}
+            >
+                {statusLabels[project.status]}
             </span>
         </div>
 
-        <!-- Title -->
         <h3
-            class="text-xl font-semibold text-zinc-100 mb-2 group-hover:text-primary-400 transition-colors"
+            class="text-xl md:text-2xl font-display font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors tracking-tight"
         >
             {project.title}
         </h3>
 
-        <!-- Description -->
-        <p class="text-sm text-zinc-400 leading-relaxed mb-6 line-clamp-3">
+        <p class="text-sm md:text-base text-zinc-400 leading-relaxed mb-5 max-w-prose">
             {project.description}
         </p>
 
-        <!-- Technologies -->
-        <div class="flex flex-wrap gap-2 mb-6">
+        <ul class="flex flex-wrap gap-1.5 mb-5" role="list">
             {
-                project.technologies.map((tech) => (
-                    <span class="tech-badge">{tech}</span>
+                project.technologies.slice(0, 5).map((tech) => (
+                    <li>
+                        <span class="tech-badge">{tech}</span>
+                    </li>
                 ))
             }
-        </div>
+            {project.technologies.length > 5 && (
+                <li>
+                    <span class="text-xs text-zinc-600 font-mono self-center">
+                        +{project.technologies.length - 5}
+                    </span>
+                </li>
+            )}
+        </ul>
 
-        <!-- Links -->
-        <div class="flex items-center gap-4">
+        <ul class="flex items-center gap-1 mt-auto" role="list">
             {
                 project.github && (
-                    <a
-                        href={project.github}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-primary-400 transition-colors"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
+                    <li>
+                        <a
+                            href={project.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-all"
                         >
-                            <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
-                        </svg>
-                        Código
-                    </a>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="currentColor"
+                                aria-hidden="true"
+                            >
+                                <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
+                            </svg>
+                            código
+                        </a>
+                    </li>
                 )
             }
             {
                 project.demo && (
-                    <a
-                        href={project.demo}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-primary-400 transition-colors"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
+                    <li>
+                        <a
+                            href={project.demo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-all"
                         >
-                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                            <polyline points="15 3 21 3 21 9" />
-                            <line x1="10" x2="21" y1="14" y2="3" />
-                        </svg>
-                        Demo
-                    </a>
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="12"
+                                height="12"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" x2="21" y1="14" y2="3" />
+                            </svg>
+                            demo
+                        </a>
+                    </li>
                 )
             }
-        </div>
+        </ul>
     </div>
-</div>
+    {
+        project.github && (
+            <a
+                href={project.github}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="absolute inset-0 z-0"
+                aria-label={`Abrir ${project.title} en GitHub`}
+            >
+                <span class="sr-only">Abrir {project.title} en GitHub</span>
+            </a>
+        )
+    }
+</article>

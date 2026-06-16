@@ -1,0 +1,57 @@
+---
+export interface Props {
+    items: string[];
+    speed?: "normal" | "slow" | "fast";
+    reverse?: boolean;
+    /** Show separator dots between items. */
+    separator?: boolean;
+    class?: string;
+}
+
+const {
+    items,
+    speed = "normal",
+    reverse = false,
+    separator = true,
+    class: className = "",
+} = Astro.props;
+
+const speedMap: Record<NonNullable<Props["speed"]>, string> = {
+    normal: "40s",
+    slow: "60s",
+    fast: "25s",
+};
+const duration = speedMap[speed];
+const animation = reverse ? "animate-marquee-reverse" : "animate-marquee";
+// Duplicate items twice for seamless loop
+const sequence = [...items, ...items];
+---
+
+<div
+    class={`relative marquee-mask overflow-hidden ${className}`}
+    aria-label="Tecnologías"
+    role="region"
+>
+    <div
+        class={`flex w-max items-center gap-8 ${animation}`}
+        style={`animation-duration: ${duration};`}
+    >
+        {
+            sequence.map((item) => (
+                <span class="flex items-center gap-8 shrink-0">
+                    <span class="font-display text-2xl md:text-3xl font-semibold text-zinc-500 hover:text-zinc-200 transition-colors whitespace-nowrap">
+                        {item}
+                    </span>
+                    {separator && (
+                        <span
+                            class="text-zinc-700 text-2xl select-none"
+                            aria-hidden="true"
+                        >
+                            ✦
+                        </span>
+                    )}
+                </span>
+            ))
+        }
+    </div>
+</div>

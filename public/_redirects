@@ -1,1 +1,2 @@
-https://sebastianmalbaceda.dev/* https://www.sebastianmalbaceda.dev/:splat 301!
+# Force canonical domain to apex (no www)
+https://www.sebastianmalbaceda.dev/* https://sebastianmalbaceda.dev/:splat 301!

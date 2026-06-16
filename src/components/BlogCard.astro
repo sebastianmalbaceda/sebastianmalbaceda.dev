@@ -8,49 +8,135 @@ export interface Props {
 
 const { post, index } = Astro.props;
 const { data, slug } = post;
+const delayClass = `reveal-delay-${(index % 6) + 1}`;
+
+const formattedDate = new Date(data.pubDate).toLocaleDateString("es-ES", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+});
+
+const wordsPerMinute = 200;
+const wordCount = post.body.split(/\s+/).length;
+const readingTime = Math.max(1, Math.round(wordCount / wordsPerMinute));
+
+const gradients = [
+    "from-blue-600 to-violet-700",
+    "from-amber-500 to-rose-600",
+    "from-emerald-500 to-cyan-700",
+    "from-fuchsia-500 to-pink-600",
+    "from-orange-500 to-amber-600",
+    "from-sky-500 to-indigo-700",
+];
+const gradient = gradients[
+    (slug.charCodeAt(0) + slug.length) % gradients.length
+];
 ---
 
 <a
     href={`/blog/${slug}/`}
-    class={`glass rounded-xl overflow-hidden card-hover animated-border block group reveal reveal-delay-${(index % 6) + 1}`}
-    style={`animation-delay: ${index * 100}ms`}
+    class={`group block h-full flex flex-col reveal ${delayClass}`}
+    style={`transition-delay: ${index * 80}ms`}
+    aria-label={`Leer artículo: ${data.title}`}
+    data-cursor="Leer"
 >
-    <div class="p-6 md:p-8">
-        <!-- Category & Date -->
-        <div class="flex items-center gap-3 text-xs text-zinc-500 mb-3">
-            <span class="tech-badge">{data.category}</span>
-            <span
-                >{
-                    new Date(data.pubDate).toLocaleDateString("es-ES", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                    })
-                }</span
+    <!-- Cover (top accent) -->
+    <div
+        class={`relative aspect-[16/9] rounded-2xl overflow-hidden bg-gradient-to-br ${gradient} mb-5 spotlight shrink-0`}
+        aria-hidden="true"
+    >
+        <div
+            class="absolute inset-0 opacity-20"
+            style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0); background-size: 18px 18px;"
+        ></div>
+        <div
+            class="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-white/10"
+        ></div>
+        <div
+            class="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-black/40 backdrop-blur-sm border border-white/10 text-[10px] font-mono uppercase tracking-wider text-white/90"
+        >
+            {data.category}
+        </div>
+        <!-- Hover arrow -->
+        <div
+            class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="text-white"
             >
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+            </svg>
+        </div>
+    </div>
+
+    <div class="px-1 flex flex-col flex-1">
+        <!-- Meta -->
+        <div
+            class="flex items-center gap-2 text-xs text-zinc-500 mb-3 font-mono flex-wrap"
+        >
+            <time datetime={data.pubDate.toISOString()}>{formattedDate}</time>
+            <span class="text-zinc-700" aria-hidden="true">·</span>
+            <span class="inline-flex items-center gap-1">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="11"
+                    height="11"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                {readingTime} min
+            </span>
         </div>
 
         <!-- Title -->
         <h3
-            class="text-lg font-semibold text-zinc-100 mb-2 group-hover:text-primary-400 transition-colors line-clamp-2"
+            class="text-lg md:text-xl font-display font-semibold text-zinc-100 mb-2 group-hover:text-white transition-colors tracking-tight line-clamp-2"
         >
             {data.title}
         </h3>
 
-        <!-- Description -->
         <p class="text-sm text-zinc-400 leading-relaxed line-clamp-2 mb-4">
             {data.description}
         </p>
 
-        <!-- Tags -->
-        <div class="flex flex-wrap gap-1.5">
-            {
-                data.tags
-                    .slice(0, 3)
-                    .map((tag) => (
-                        <span class="text-xs text-zinc-600">#{tag}</span>
-                    ))
-            }
-        </div>
+        <span
+            class="mt-auto inline-flex items-center text-xs font-mono text-zinc-500 group-hover:text-blue-400 transition-colors"
+            aria-hidden="true"
+        >
+            Leer artículo
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="ml-1.5 transition-transform duration-300 group-hover:translate-x-1"
+            >
+                <path d="M5 12h14"></path>
+                <path d="m12 5 7 7-7 7"></path>
+            </svg>
+        </span>
     </div>
 </a>

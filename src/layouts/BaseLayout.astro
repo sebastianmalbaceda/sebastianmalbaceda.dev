@@ -7,6 +7,9 @@ export interface Props {
     ogImage?: string;
     ogType?: string;
     canonical?: string;
+    publishedTime?: string;
+    modifiedTime?: string;
+    article?: boolean;
 }
 
 const {
@@ -15,72 +18,96 @@ const {
     ogImage,
     ogType = "website",
     canonical,
+    publishedTime,
+    modifiedTime,
+    article = false,
 } = Astro.props;
+
 const siteUrl = "https://sebastianmalbaceda.dev";
 const defaultOgImage = `${siteUrl}/images/og-default.png`;
+const fullCanonical =
+    canonical ?? new URL(Astro.url.pathname, siteUrl).toString();
+
+const personStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: "Sebastián Malbaceda Leyva",
+    givenName: "Sebastián",
+    familyName: "Malbaceda Leyva",
+    jobTitle: "Estudiante de Ingeniería Informática",
+    url: siteUrl,
+    sameAs: [
+        "https://github.com/sebastianmalbaceda",
+        "https://www.linkedin.com/in/sebastiánmalbaceda/",
+    ],
+    email: "sebastian.malbaceda.leyva@gmail.com",
+    knowsAbout: [
+        "Computer Science",
+        "Artificial Intelligence",
+        "Software Development",
+        "Machine Learning",
+    ],
+};
 ---
 
 <!doctype html>
 <html lang="es" class="dark">
     <head>
         <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="description" content={description} />
+        <meta name="theme-color" content="#09090b" />
+        <meta name="color-scheme" content="dark" />
+        <meta name="generator" content={Astro.generator} />
+        <meta name="robots" content="index, follow" />
 
-        <!-- Google Fonts -->
+        <link rel="canonical" href={fullCanonical} />
+
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+        <link rel="apple-touch-icon" href="/favicon.svg" />
+        <link rel="mask-icon" href="/favicon.svg" color="#3b82f6" />
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
             rel="stylesheet"
         />
 
-        <!-- Open Graph -->
+        <meta property="og:locale" content="es_ES" />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         <meta property="og:image" content={ogImage || defaultOgImage} />
-        <meta property="og:url" content={canonical || siteUrl} />
+        <meta property="og:url" content={fullCanonical} />
         <meta property="og:type" content={ogType} />
         <meta property="og:site_name" content="Sebastián Malbaceda Leyva" />
+        {article && publishedTime && (
+            <meta property="article:published_time" content={publishedTime} />
+        )}
+        {article && modifiedTime && (
+            <meta property="article:modified_time" content={modifiedTime} />
+        )}
 
-        <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={ogImage || defaultOgImage} />
 
-        <!-- Canonical -->
-        {canonical && <link rel="canonical" href={canonical} />}
-
-        <!-- Structured Data -->
         <script
             type="application/ld+json"
-            set:html={JSON.stringify({
-                "@context": "https://schema.org",
-                "@type": "Person",
-                name: "Sebastián Malbaceda Leyva",
-                givenName: "Sebastián",
-                familyName: "Malbaceda Leyva",
-                jobTitle: "Estudiante de Ingeniería Informática",
-                url: siteUrl,
-                sameAs: [
-                    "https://github.com/sebastianmalbaceda",
-                    "https://www.linkedin.com/in/sebastiánmalbaceda/",
-                ],
-                email: "sebastian.malbaceda.leyva@gmail.com",
-                knowsAbout: [
-                    "Computer Science",
-                    "Artificial Intelligence",
-                    "Software Development",
-                    "Machine Learning",
-                ],
-            })}
+            is:inline
+            set:html={JSON.stringify(personStructuredData)}
         />
 
         <title>{title}</title>
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     </head>
     <body class="min-h-screen bg-zinc-950 text-zinc-100">
+        <a
+            href="#main"
+            class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary-600 focus:text-white focus:rounded-lg focus:shadow-lg"
+        >
+            Saltar al contenido principal
+        </a>
         <slot />
     </body>
 </html>

@@ -1,0 +1,407 @@
+---
+// All client-side interactions. Single source of truth for:
+//   - Custom cursor with label follower
+//   - Mouse parallax on [data-parallax]
+//   - Section tint shift based on visible section
+//   - Spotlight effect on .spotlight
+//   - 3D Tilt on .tilt
+//   - Magnetic CTAs (.magnetic)
+//   - Animated counters ([data-counter])
+//   - Text scramble ([data-scramble])
+//   - Skill bar fills
+//   - Scroll reveal observer
+//   - Footer clock (live)
+//   - Re-init on view transitions
+---
+
+<div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
+<div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
+<div id="cursor-label" class="cursor-label" aria-hidden="true"></div>
+
+<script>
+    /* ════════════════════════════════════════════════════════════
+       Custom cursor + label follower (desktop only)
+       ════════════════════════════════════════════════════════════ */
+    function setupCursor() {
+        if (!matchMedia("(pointer:fine)").matches) return;
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+        const dot = document.getElementById("cursor-dot");
+        const ring = document.getElementById("cursor-ring");
+        const label = document.getElementById("cursor-label");
+        if (!dot || !ring || !label) return;
+
+        document.body.classList.add("has-custom-cursor");
+
+        let mx = 0, my = 0; // mouse
+        let rx = 0, ry = 0; // ring (eased)
+        let lx = 0, ly = 0; // label (different easing)
+
+        const onMove = (e: MouseEvent) => {
+            mx = e.clientX;
+            my = e.clientY;
+            dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+        };
+
+        const loop = () => {
+            rx += (mx - rx) * 0.18;
+            ry += (my - ry) * 0.18;
+            ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+
+            // Label follows with more delay for a "floaty" feel
+            const showLabel = label.classList.contains("visible");
+            const targetX = showLabel ? mx : mx;
+            const targetY = showLabel ? my - 32 : my;
+            lx += (targetX - lx) * 0.12;
+            ly += (targetY - ly) * 0.12;
+            label.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+
+            requestAnimationFrame(loop);
+        };
+
+        const findInteractive = (el: Element | null): {
+            el: Element;
+            text: string | null;
+            variant: "default" | "hover" | "drag" | "view";
+        } | null => {
+            if (!el) return null;
+            // Look for data-cursor attribute (label text) and data-cursor-variant
+            const target = el.closest<HTMLElement>("[data-cursor], a, button, [role='button'], .magnetic, input, textarea, label");
+            if (!target) return null;
+            const text = target.dataset.cursor ?? null;
+            let variant: "default" | "hover" | "drag" | "view" = "default";
+            if (target.matches("input, textarea, label")) {
+                variant = "drag";
+            } else if (target.matches("a, button, [role='button'], .magnetic")) {
+                variant = target.tagName === "A" && target.hasAttribute("target") ? "view" : "hover";
+            }
+            return { el: target, text, variant };
+        };
+
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseover", (e) => {
+            const found = findInteractive(e.target as Element);
+            if (found) {
+                ring.classList.toggle("hover", found.variant === "hover");
+                ring.classList.toggle("view", found.variant === "view");
+                if (found.text) {
+                    label.textContent = found.text;
+                    label.classList.add("visible");
+                } else {
+                    label.classList.remove("visible");
+                }
+            } else {
+                ring.classList.remove("hover");
+                ring.classList.remove("view");
+                label.classList.remove("visible");
+            }
+        });
+        document.addEventListener("mousedown", () => ring.classList.add("press"));
+        document.addEventListener("mouseup", () => ring.classList.remove("press"));
+
+        document.addEventListener("mouseleave", () => {
+            ring.style.opacity = "0";
+            dot.style.opacity = "0";
+            label.style.opacity = "0";
+        });
+        document.addEventListener("mouseenter", () => {
+            ring.style.opacity = "1";
+            dot.style.opacity = "1";
+            label.style.opacity = "";
+        });
+
+        loop();
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Mouse parallax on [data-parallax] elements
+       ════════════════════════════════════════════════════════════ */
+    function setupParallax() {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const elements = document.querySelectorAll<HTMLElement>("[data-parallax]");
+        if (!elements.length) return;
+
+        let mx = 0, my = 0, rx = 0, ry = 0, raf = 0;
+        const onMove = (e: MouseEvent) => {
+            mx = (e.clientX / window.innerWidth - 0.5) * 2;
+            my = (e.clientY / window.innerHeight - 0.5) * 2;
+            if (!raf) raf = requestAnimationFrame(loop);
+        };
+
+        const loop = () => {
+            rx += (mx - rx) * 0.08;
+            ry += (my - ry) * 0.08;
+            elements.forEach((el) => {
+                const speed = parseFloat(el.dataset.parallax ?? "20");
+                el.style.setProperty("--px", `${rx * speed}px`);
+                el.style.setProperty("--py", `${ry * speed}px`);
+            });
+            if (Math.abs(mx - rx) > 0.001 || Math.abs(my - ry) > 0.001) {
+                raf = requestAnimationFrame(loop);
+            } else {
+                raf = 0;
+            }
+        };
+
+        document.addEventListener("mousemove", onMove);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Section tint shift
+       Body background gradient tint changes per visible section
+       ════════════════════════════════════════════════════════════ */
+    function setupSectionTint() {
+        const sections = document.querySelectorAll<HTMLElement>("section[data-tint]");
+        if (!sections.length) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        const tint = (entry.target as HTMLElement).dataset.tint ?? "blue";
+                        document.body.dataset.tint = tint;
+                    }
+                }
+            },
+            { rootMargin: "-30% 0px -60% 0px", threshold: 0 },
+        );
+        sections.forEach((s) => observer.observe(s));
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Spotlight effect (track mouse over .spotlight)
+       ════════════════════════════════════════════════════════════ */
+    function setupSpotlight() {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const els = document.querySelectorAll<HTMLElement>(".spotlight");
+        els.forEach((el) => {
+            el.addEventListener("pointermove", (e) => {
+                const r = el.getBoundingClientRect();
+                const x = ((e.clientX - r.left) / r.width) * 100;
+                const y = ((e.clientY - r.top) / r.height) * 100;
+                el.style.setProperty("--mx", `${x}%`);
+                el.style.setProperty("--my", `${y}%`);
+            });
+        });
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       3D Tilt
+       ════════════════════════════════════════════════════════════ */
+    function setupTilt() {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const els = document.querySelectorAll<HTMLElement>(".tilt");
+        els.forEach((el) => {
+            const max = Number(el.dataset.tilt ?? 6);
+            el.addEventListener("pointermove", (e) => {
+                const r = el.getBoundingClientRect();
+                const x = (e.clientX - r.left) / r.width;
+                const y = (e.clientY - r.top) / r.height;
+                const ry = (x - 0.5) * 2 * max;
+                const rx = (0.5 - y) * 2 * max;
+                el.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+            });
+            el.addEventListener("pointerleave", () => {
+                el.style.transform =
+                    "perspective(900px) rotateX(0deg) rotateY(0deg)";
+            });
+        });
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Magnetic CTAs
+       ════════════════════════════════════════════════════════════ */
+    function setupMagnetic() {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const els = document.querySelectorAll<HTMLElement>(".magnetic");
+        els.forEach((el) => {
+            const strength = Number(el.dataset.magnetic ?? 0.3);
+            el.addEventListener("pointermove", (e) => {
+                const r = el.getBoundingClientRect();
+                const x = (e.clientX - r.left - r.width / 2) * strength;
+                const y = (e.clientY - r.top - r.height / 2) * strength;
+                el.style.transform = `translate(${x}px, ${y}px)`;
+            });
+            el.addEventListener("pointerleave", () => {
+                el.style.transform = "translate(0, 0)";
+            });
+        });
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Animated counters
+       ════════════════════════════════════════════════════════════ */
+    function setupCounters() {
+        const els = document.querySelectorAll<HTMLElement>("[data-counter]");
+        if (!els.length) return;
+
+        const animate = (el: HTMLElement) => {
+            const target = Number(el.dataset.counter ?? 0);
+            const duration = Number(el.dataset.duration ?? 1600);
+            const startTime = performance.now();
+            const startVal = 0;
+            const format = (n: number) =>
+                el.dataset.format
+                    ? el.dataset.format.replace("{n}", Math.round(n).toString())
+                    : Math.round(n).toString();
+            const tick = (now: number) => {
+                const t = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - t, 3);
+                el.textContent = format(startVal + (target - startVal) * eased);
+                if (t < 1) requestAnimationFrame(tick);
+                else el.textContent = format(target);
+            };
+            requestAnimationFrame(tick);
+        };
+
+        const io = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        animate(entry.target as HTMLElement);
+                        io.unobserve(entry.target);
+                    }
+                }
+            },
+            { threshold: 0.4 },
+        );
+        els.forEach((el) => io.observe(el));
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Text scramble on hover
+       ════════════════════════════════════════════════════════════ */
+    function setupScramble() {
+        if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        const CHARS = "!<>-_\\/[]{}—=+*^?#@$%&";
+        const els = document.querySelectorAll<HTMLElement>("[data-scramble]");
+
+        const scrambleOnce = (el: HTMLElement) => {
+            const original = el.dataset.original ?? el.textContent ?? "";
+            if (!el.dataset.original) el.dataset.original = original;
+            const iterations = 6;
+            let frame = 0;
+            const total = original.length * iterations;
+            const tick = () => {
+                let out = "";
+                for (let i = 0; i < original.length; i++) {
+                    const ch = original[i];
+                    if (ch === " ") {
+                        out += " ";
+                        continue;
+                    }
+                    if (frame >= i * iterations) {
+                        out += ch;
+                    } else {
+                        out += CHARS[Math.floor(Math.random() * CHARS.length)];
+                    }
+                }
+                el.textContent = out;
+                frame++;
+                if (frame <= total) {
+                    requestAnimationFrame(tick);
+                } else {
+                    el.textContent = original;
+                }
+            };
+            requestAnimationFrame(tick);
+        };
+
+        els.forEach((el) => {
+            el.addEventListener("mouseenter", () => scrambleOnce(el));
+        });
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Skill bar fill animation
+       ════════════════════════════════════════════════════════════ */
+    function setupSkillBars() {
+        const els = document.querySelectorAll<HTMLElement>("[data-fill]");
+        if (!els.length) return;
+
+        const animate = (el: HTMLElement) => {
+            const target = Number(el.dataset.fill ?? 0);
+            el.style.width = `${target}%`;
+        };
+
+        const io = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        animate(entry.target as HTMLElement);
+                        io.unobserve(entry.target);
+                    }
+                }
+            },
+            { threshold: 0.5 },
+        );
+        els.forEach((el) => {
+            el.style.width = "0%";
+            io.observe(el);
+        });
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Reveal on scroll
+       ════════════════════════════════════════════════════════════ */
+    function setupReveal() {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                for (const entry of entries) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("visible");
+                        observer.unobserve(entry.target);
+                    }
+                }
+            },
+            { threshold: 0.1, rootMargin: "0px 0px -40px 0px" },
+        );
+        document
+            .querySelectorAll(".reveal:not(.visible)")
+            .forEach((el) => observer.observe(el));
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Live clock + last build
+       ════════════════════════════════════════════════════════════ */
+    function setupClock() {
+        const clock = document.getElementById("footer-clock");
+        if (!clock) return;
+        const update = () => {
+            const now = new Date();
+            const time = now.toLocaleTimeString("es-ES", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+                hour12: false,
+            });
+            clock.textContent = time;
+        };
+        update();
+        setInterval(update, 1000);
+    }
+
+    /* ════════════════════════════════════════════════════════════
+       Boot
+       ════════════════════════════════════════════════════════════ */
+    function boot() {
+        setupCursor();
+        setupParallax();
+        setupSectionTint();
+        setupSpotlight();
+        setupTilt();
+        setupMagnetic();
+        setupCounters();
+        setupScramble();
+        setupSkillBars();
+        setupReveal();
+        setupClock();
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", boot);
+    } else {
+        boot();
+    }
+    document.addEventListener("astro:after-swap", boot);
+</script>
