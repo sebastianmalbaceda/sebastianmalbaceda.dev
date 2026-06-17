@@ -1,0 +1,50 @@
+---
+import { capabilities } from "../data/site";
+
+const accentDot: Record<string, string> = {
+  ember: "bg-ember-400",
+  gold: "bg-gold-400",
+  sage: "bg-sage-400",
+  coral: "bg-coral",
+  sky: "bg-sky-400",
+};
+---
+
+<section id="capabilities" class="section relative" data-tint="sage">
+  <div class="shell-wide">
+    <div class="flex items-end justify-between flex-wrap gap-6 mb-14 md:mb-16">
+      <div>
+        <p class="eyebrow mb-6 reveal">03 — Capacidades</p>
+        <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+          Mi arsenal <span class="italic-accent sage-text">técnico</span>.
+        </h2>
+      </div>
+      <p class="text-ink-400 max-w-sm leading-relaxed reveal d-2">
+        Tecnologías, frameworks y métodos con los que trabajo día a día.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-10 gap-y-10">
+      {capabilities.map((c, i) => {
+        const delayClass = `d-${(i % 6) + 1}`;
+        return (
+        <div class={`group reveal ${delayClass}`} style={`transition-delay: ${i * 60}ms`}>
+          <div class="flex items-center gap-3 mb-5">
+            <span class="text-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" aria-hidden="true">{c.icon}</span>
+            <div>
+              <h3 class="font-display text-lg text-ink-100 group-hover:text-ink-50 transition-colors tracking-tight">{c.title}</h3>
+              <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600 mt-0.5">
+                <span class={`inline-block w-1.5 h-1.5 rounded-full ${accentDot[c.accent]} mr-1.5 align-middle`} aria-hidden="true"></span>
+                {c.summary}
+              </p>
+            </div>
+          </div>
+          <ul class="flex flex-wrap gap-1.5" role="list">
+            {c.items.map((s) => <li><span class="chip">{s}</span></li>)}
+          </ul>
+        </div>
+        );
+      })}
+    </div>
+  </div>
+</section>

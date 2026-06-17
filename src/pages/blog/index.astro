@@ -1,140 +1,84 @@
 ---
 import BaseLayout from "../../layouts/BaseLayout.astro";
-import Navbar from "../../components/Navbar.astro";
-import Footer from "../../components/Footer.astro";
-import SectionHeader from "../../components/SectionHeader.astro";
-import BlogCard from "../../components/BlogCard.astro";
+import Effects from "../../components/Effects.astro";
 import ScrollProgress from "../../components/ScrollProgress.astro";
-import Interactions from "../../components/Interactions.astro";
+import Nav from "../../components/Nav.astro";
+import Footer from "../../components/Footer.astro";
+import BlogCard from "../../components/BlogCard.astro";
 import { getCollection } from "astro:content";
 
-const blogPosts = await getCollection("blog", ({ data }) => !data.draft);
-const sortedPosts = blogPosts.sort(
-    (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
+const posts = (await getCollection("blog", ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime(),
 );
-const categories = [...new Set(sortedPosts.map((p) => p.data.category))];
+const categories = [...new Set(posts.map((p) => p.data.category))];
 ---
 
-<BaseLayout
-    title="Blog | Sebastián Malbaceda Leyva"
-    description="Artículos sobre inteligencia artificial, desarrollo de software, visión por computador y tecnología."
->
-    <Interactions />
-    <ScrollProgress />
-    <Navbar currentPath="/blog" />
+<BaseLayout title="Escritos | Sebastián Malbaceda Leyva" description="Artículos sobre inteligencia artificial, desarrollo de software, visión por computador y tecnología.">
+  <Effects />
+  <ScrollProgress />
+  <Nav currentPath="/blog" />
 
-    <main id="main" class="pt-32 section-padding min-h-screen">
-        <div class="section-container">
-            <SectionHeader
-                index="//"
-                label="Blog"
-                title="Notas y aprendizajes"
-                description="Reflexiones, tutoriales y aprendizajes sobre tecnología, programación e inteligencia artificial."
-            />
+  <main id="main" class="pt-32 section min-h-screen">
+    <div class="shell-wide">
+      <p class="eyebrow mb-6 reveal">// — Escritos</p>
+      <h1 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+        Notas y <span class="italic-accent ember-text">aprendizajes</span>.
+      </h1>
+      <p class="mt-5 text-ink-400 max-w-xl leading-relaxed reveal d-2">
+        Reflexiones, tutoriales y aprendizajes sobre tecnología, programación e inteligencia artificial.
+      </p>
 
-            <div
-                class="flex flex-wrap justify-center gap-2 mb-14 reveal"
-                id="blog-categories"
-                role="group"
-                aria-label="Filtrar artículos por categoría"
-            >
-                <button
-                    type="button"
-                    data-category="all"
-                    class="px-4 py-2 text-sm rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30 font-mono"
-                    aria-pressed="true"
-                >
-                    #all
-                </button>
-                {
-                    categories.map((cat) => (
-                        <button
-                            type="button"
-                            data-category={cat}
-                            class="px-4 py-2 text-sm rounded-full bg-zinc-900/60 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors font-mono"
-                            aria-pressed="false"
-                        >
-                            #{cat}
-                        </button>
-                    ))
-                }
+      <div class="flex flex-wrap justify-center gap-2 mb-14 mt-12 reveal d-3" id="blog-categories" role="group" aria-label="Filtrar artículos por categoría">
+        <button type="button" data-category="all" class="px-4 py-2 text-sm rounded-full bg-ember-500/10 text-ember-300 border border-ember-500/30 font-mono" aria-pressed="true">#all</button>
+        {categories.map((cat) => (
+          <button type="button" data-category={cat} class="px-4 py-2 text-sm rounded-full bg-ink-900/60 text-ink-400 border border-ink-800 hover:bg-ink-800 transition-colors font-mono" aria-pressed="false">#{cat}</button>
+        ))}
+      </div>
+
+      {posts.length > 0 ? (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12" id="blog-posts">
+          {posts.map((post, i) => (
+            <div data-category={post.data.category}>
+              <BlogCard post={post} index={i} />
             </div>
-
-            {
-                sortedPosts.length > 0 ? (
-                    <div
-                        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12"
-                        id="blog-posts"
-                    >
-                        {sortedPosts.map((post, i) => (
-                            <div data-category={post.data.category}>
-                                <BlogCard post={post} index={i} />
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div class="text-center py-20">
-                        <p class="text-zinc-500 text-lg">
-                            No hay artículos publicados todavía.
-                        </p>
-                    </div>
-                )
-            }
+          ))}
         </div>
-    </main>
+      ) : (
+        <div class="text-center py-20">
+          <p class="text-ink-500 text-lg">No hay artículos publicados todavía.</p>
+        </div>
+      )}
+    </div>
+  </main>
 
-    <Footer />
+  <Footer />
 </BaseLayout>
 
 <script>
-    function setupCategoryFilter() {
-        const buttons = document.querySelectorAll<HTMLButtonElement>(
-            "#blog-categories button[data-category]",
-        );
-        const posts = document.querySelectorAll<HTMLElement>(
-            "#blog-posts [data-category]",
-        );
-
-        const filterPosts = (category: string): void => {
-            buttons.forEach((btn) => {
-                const isActive = btn.dataset.category === category;
-                btn.className = isActive
-                    ? "px-4 py-2 text-sm rounded-full bg-blue-500/10 text-blue-300 border border-blue-500/30 font-mono"
-                    : "px-4 py-2 text-sm rounded-full bg-zinc-900/60 text-zinc-400 border border-zinc-800 hover:bg-zinc-800 transition-colors font-mono";
-                btn.setAttribute("aria-pressed", String(isActive));
-            });
-            posts.forEach((post) => {
-                post.style.display =
-                    category === "all" || post.dataset.category === category
-                        ? ""
-                        : "none";
-            });
-        };
-
-        const params = new URLSearchParams(window.location.search);
-        const initialCategory = params.get("category") || "all";
-        filterPosts(initialCategory);
-
-        buttons.forEach((btn) => {
-            btn.addEventListener("click", () => {
-                const category = btn.dataset.category || "all";
-                const url = new URL(window.location.href);
-                if (category === "all") {
-                    url.searchParams.delete("category");
-                } else {
-                    url.searchParams.set("category", category);
-                }
-                window.history.pushState({}, "", url);
-                filterPosts(category);
-            });
-        });
-
-        window.addEventListener("popstate", () => {
-            const params = new URLSearchParams(window.location.search);
-            filterPosts(params.get("category") || "all");
-        });
-    }
-
-    setupCategoryFilter();
-    document.addEventListener("astro:after-swap", setupCategoryFilter);
+  function setupCategoryFilter() {
+    const buttons = document.querySelectorAll<HTMLButtonElement>("#blog-categories button[data-category]");
+    const posts = document.querySelectorAll<HTMLElement>("#blog-posts [data-category]");
+    const filter = (cat: string) => {
+      buttons.forEach((b) => {
+        const on = b.dataset.category === cat;
+        b.className = on
+          ? "px-4 py-2 text-sm rounded-full bg-ember-500/10 text-ember-300 border border-ember-500/30 font-mono"
+          : "px-4 py-2 text-sm rounded-full bg-ink-900/60 text-ink-400 border border-ink-800 hover:bg-ink-800 transition-colors font-mono";
+        b.setAttribute("aria-pressed", String(on));
+      });
+      posts.forEach((p) => { p.style.display = cat === "all" || p.dataset.category === cat ? "" : "none"; });
+    };
+    const params = new URLSearchParams(window.location.search);
+    filter(params.get("category") || "all");
+    buttons.forEach((b) => b.addEventListener("click", () => {
+      const cat = b.dataset.category || "all";
+      const url = new URL(window.location.href);
+      if (cat === "all") url.searchParams.delete("category"); else url.searchParams.set("category", cat);
+      window.history.pushState({}, "", url);
+      filter(cat);
+    }));
+    window.addEventListener("popstate", () => filter(new URLSearchParams(window.location.search).get("category") || "all"));
+  }
+  setupCategoryFilter();
+  document.addEventListener("astro:after-swap", setupCategoryFilter);
 </script>

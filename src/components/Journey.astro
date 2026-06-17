@@ -1,0 +1,41 @@
+---
+import { journey } from "../data/site";
+
+const kindIcon: Record<string, string> = {
+  education: "🎓",
+  project: "◆",
+  milestone: "✦",
+};
+---
+
+<section id="journey" class="section relative" data-tint="coral">
+  <div class="shell-wide">
+    <div class="mb-14 md:mb-16">
+      <p class="eyebrow mb-6 reveal">04 — Trayectoria</p>
+      <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+        El camino hasta <span class="italic-accent ember-text">ahora</span>.
+      </h2>
+    </div>
+
+    <ol class="relative max-w-3xl" role="list">
+      <div class="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-ember-500/40 via-ink-800 to-transparent" aria-hidden="true"></div>
+      {journey.map((j, i) => {
+        const delayClass = `d-${(i % 6) + 1}`;
+        return (
+        <li class={`relative pl-9 pb-10 last:pb-0 reveal ${delayClass}`} style={`transition-delay: ${i * 70}ms`}>
+          <span class="absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full border-2 border-ember-500/60 bg-ink-950 flex items-center justify-center" aria-hidden="true">
+            <span class="w-1.5 h-1.5 rounded-full bg-ember-400"></span>
+          </span>
+          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
+            <span class="font-mono text-xs text-ember-400 tracking-wider">{j.year}</span>
+            <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600" aria-hidden="true">{kindIcon[j.kind]}</span>
+          </div>
+          <h3 class="font-display text-xl md:text-2xl text-ink-50 tracking-tight">{j.title}</h3>
+          <p class="text-sm text-ink-500 font-mono mt-0.5">{j.place}</p>
+          <p class="text-ink-400 leading-relaxed mt-2 max-w-xl">{j.description}</p>
+        </li>
+        );
+      })}
+    </ol>
+  </div>
+</section>

@@ -1,73 +1,21 @@
 ---
 export interface Props {
-    size?: number;
-    /** Use the "filled" wordmark variant (with name). */
-    wordmark?: boolean;
-    class?: string;
+  size?: number;
+  class?: string;
 }
-const { size = 28, wordmark = false, class: className = "" } = Astro.props;
+const { size = 28, class: className = "" } = Astro.props;
 ---
 
-<span class={`inline-flex items-center gap-2.5 ${className}`}>
-    <svg
-        width={size}
-        height={size}
-        viewBox="0 0 40 40"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        class="shrink-0"
-        aria-hidden="true"
-    >
-        <defs>
-            <linearGradient
-                id="logo-grad"
-                x1="0"
-                y1="0"
-                x2="40"
-                y2="40"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop offset="0" stop-color="#60a5fa" />
-                <stop offset="0.5" stop-color="#3b82f6" />
-                <stop offset="1" stop-color="#8b5cf6" />
-            </linearGradient>
-            <linearGradient
-                id="logo-grad-soft"
-                x1="0"
-                y1="0"
-                x2="40"
-                y2="40"
-                gradientUnits="userSpaceOnUse"
-            >
-                <stop offset="0" stop-color="#60a5fa" stop-opacity="0.4" />
-                <stop offset="1" stop-color="#8b5cf6" stop-opacity="0.4" />
-            </linearGradient>
-        </defs>
-        <rect
-            x="2"
-            y="2"
-            width="36"
-            height="36"
-            rx="10"
-            stroke="url(#logo-grad-soft)"
-            stroke-width="1.5"
-            fill="rgba(9,9,11,0.5)"
-        />
-        <path
-            d="M13 28V12h2.4l4.8 9.6L25 12h2.4v16h-2.2V16.2L20.6 25h-1l-4.6-8.8V28H13z"
-            fill="url(#logo-grad)"
-        ></path>
-    </svg>
-    {
-        wordmark && (
-            <span class="flex flex-col leading-none">
-                <span class="text-sm font-display font-semibold text-zinc-100 tracking-tight">
-                    Sebastián
-                </span>
-                <span class="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mt-0.5">
-                    Malbaceda
-                </span>
-            </span>
-        )
-    }
+<span class={`inline-flex items-center ${className}`}>
+  <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" aria-hidden="true">
+    <defs>
+      <linearGradient id="logo-ember" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#fdba74" />
+        <stop offset="0.5" stop-color="#f97316" />
+        <stop offset="1" stop-color="#fbbf24" />
+      </linearGradient>
+    </defs>
+    <rect x="2" y="2" width="36" height="36" rx="11" fill="#0a0908" stroke="url(#logo-ember)" stroke-width="1.5" />
+    <path d="M13 28V12h2.4l4.8 9.6L25 12h2.4v16h-2.2V16.2L20.6 25h-1l-4.6-8.8V28H13z" fill="url(#logo-ember)" />
+  </svg>
 </span>

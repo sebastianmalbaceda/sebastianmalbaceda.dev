@@ -1,0 +1,133 @@
+---
+import Logo from "./Logo.astro";
+import { me } from "../data/site";
+
+export interface Props {
+  currentPath?: string;
+}
+const { currentPath = "/" } = Astro.props;
+
+const navItems = [
+  { label: "Sobre mí", href: "/#about", id: "about" },
+  { label: "Proyectos", href: "/#work", id: "work" },
+  { label: "Capacidades", href: "/#capabilities", id: "capabilities" },
+  { label: "Trayectoria", href: "/#journey", id: "journey" },
+  { label: "Ahora", href: "/#now", id: "now" },
+  { label: "Escritos", href: "/#writing", id: "writing" },
+];
+
+const isActive = (href: string, cur: string) => {
+  if (href === "/") return cur === "/" || cur === "";
+  if (href.startsWith("/#")) return false;
+  return cur.startsWith(href);
+};
+---
+
+<header id="site-header" class="fixed top-0 left-0 right-0 z-50 px-4 pt-4 pointer-events-none">
+  <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 pointer-events-auto">
+    <!-- Logo -->
+    <a href="/" class="glass-strong rounded-full pl-2.5 pr-4 py-2 flex items-center gap-2.5 group magnetic spotlight elev-1" data-magnetic="0.2" data-cursor="Inicio" aria-label={`${me.name} — Inicio`}>
+      <Logo size={22} class="transition-transform duration-700 group-hover:rotate-[8deg]" />
+      <span class="hidden sm:flex flex-col leading-none">
+        <span class="text-sm font-display font-semibold text-ink-50 tracking-tight">sebastián<span class="text-ember-400">.dev</span></span>
+        <span class="text-[9px] font-mono text-ink-500 uppercase tracking-[0.2em] mt-0.5">v2.0.0</span>
+      </span>
+    </a>
+
+    <!-- Nav pill -->
+    <nav class="hidden lg:block glass-strong rounded-full px-2 py-1.5 elev-1 relative" aria-label="Navegación principal" id="nav-pill">
+      <span id="nav-indicator" class="absolute top-1.5 left-2 h-[calc(100%-12px)] rounded-full bg-ink-800/60 pointer-events-none transition-all duration-400" style="width:0px;opacity:0;" aria-hidden="true"></span>
+      <ul class="flex items-center gap-0.5 relative" role="list">
+        {navItems.map((item) => (
+          <li>
+            <a
+              href={item.href}
+              data-nav={item.href}
+              data-cursor={item.label}
+              class:list={[
+                "relative px-3.5 py-1.5 text-sm rounded-full transition-colors",
+                isActive(item.href, currentPath) ? "text-ink-50" : "text-ink-400 hover:text-ink-50",
+              ]}
+              aria-current={isActive(item.href, currentPath) ? "page" : undefined}
+            >
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Actions -->
+    <div class="flex items-center gap-2">
+      <button
+        id="cmd-trigger"
+        class="glass-strong rounded-full px-3 py-2 hidden sm:flex items-center gap-2 text-xs text-ink-400 hover:text-ink-100 transition-colors magnetic elev-1"
+        data-magnetic="0.2"
+        data-cursor="⌘K"
+        aria-label="Abrir paleta de comandos"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+        <span class="font-mono">Buscar</span>
+        <kbd class="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 ml-1 text-[10px] font-mono text-ink-500 bg-ink-900 border border-ink-800 rounded">⌘K</kbd>
+      </button>
+
+      <a href="/#contact" class="ripple magnetic hidden md:inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-full bg-ink-50 text-ink-950 font-medium hover:bg-white transition-all elev-1" data-magnetic="0.25" data-ripple="light" data-cursor="Hablemos">
+        Hablemos
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+
+      <button
+        id="menu-toggle"
+        class="lg:hidden glass-strong rounded-full p-2.5 text-ink-300 hover:text-ink-50 transition-colors elev-1"
+        aria-label="Abrir menú"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <svg id="menu-icon-open" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg>
+        <svg id="menu-icon-close" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="hidden" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" class="hidden lg:hidden mt-3 max-w-6xl mx-auto pointer-events-auto">
+    <div class="glass-strong rounded-2xl p-2 elev-3">
+      <ul class="space-y-0.5" role="list">
+        {navItems.map((item) => (
+          <li>
+            <a href={item.href} class:list={["flex items-center justify-between px-4 py-3 text-sm rounded-xl transition-colors", isActive(item.href, currentPath) ? "text-ink-50 bg-ink-800/60" : "text-ink-300 hover:text-ink-50 hover:bg-ink-800/40"]} aria-current={isActive(item.href, currentPath) ? "page" : undefined}>
+              <span>{item.label}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+            </a>
+          </li>
+        ))}
+        <li class="pt-1">
+          <a href="/#contact" class="flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-ink-50 text-ink-950 font-medium text-sm">
+            Hablemos
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>
+
+<!-- Command palette -->
+<div id="cmd-palette" class="fixed inset-0 z-[100] hidden items-start justify-center pt-[12vh] px-4" role="dialog" aria-modal="true" aria-label="Paleta de comandos">
+  <div id="cmd-backdrop" class="absolute inset-0 bg-ink-950/70 backdrop-blur-sm" aria-hidden="true"></div>
+  <div class="relative w-full max-w-xl glass-strong rounded-2xl overflow-hidden border border-ink-700/50 elev-5">
+    <div class="flex items-center gap-3 px-4 py-3.5 border-b border-ink-800/60">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-ink-500" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" id="cmd-input" placeholder="Escribe un comando o busca…" class="flex-1 bg-transparent border-none outline-none text-sm text-ink-50 placeholder-ink-500" autocomplete="off" spellcheck="false" />
+      <kbd class="font-mono text-[10px] text-ink-500 bg-ink-900 border border-ink-800 px-1.5 py-0.5 rounded">ESC</kbd>
+    </div>
+    <ul id="cmd-results" class="max-h-80 overflow-y-auto p-2" role="listbox" aria-label="Comandos"></ul>
+    <div class="px-4 py-2.5 border-t border-ink-800/60 flex items-center justify-between text-[10px] font-mono text-ink-500">
+      <div class="flex items-center gap-3">
+        <span class="inline-flex items-center gap-1"><kbd class="px-1 bg-ink-900 border border-ink-800 rounded">↑</kbd><kbd class="px-1 bg-ink-900 border border-ink-800 rounded">↓</kbd>navegar</span>
+        <span class="inline-flex items-center gap-1"><kbd class="px-1 bg-ink-900 border border-ink-800 rounded">↵</kbd>abrir</span>
+      </div>
+      <span>⌘K</span>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,32 @@
+---
+import { me } from "../data/site";
+---
+
+<section id="now" class="section relative" data-tint="sage">
+  <div class="shell-wide">
+    <div class="mb-14 md:mb-16">
+      <p class="eyebrow mb-6 reveal">05 — Ahora</p>
+      <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+        En qué estoy <span class="italic-accent sage-text">trabajando</span>.
+      </h2>
+      <p class="mt-5 text-ink-400 max-w-xl leading-relaxed reveal d-2">
+        Una instantánea de lo que estudio, investigo y construyo este trimestre.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-5">
+      {me.now.map((item, i) => {
+        const delayClass = `d-${(i % 6) + 1}`;
+        return (
+        <div class={`group relative p-6 md:p-7 rounded-2xl border border-ink-800/70 bg-ink-900/30 hover:border-sage-500/30 transition-all duration-500 reveal ${delayClass} lift elev-1 hover:elev-3`} style={`transition-delay: ${i * 100}ms`}>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse-soft shrink-0" aria-hidden="true"></span>
+            <span class="text-[10px] font-mono uppercase tracking-[0.25em] text-ink-500">{item.label}</span>
+          </div>
+          <p class="text-lg md:text-xl text-ink-50 font-display leading-snug">{item.value}</p>
+        </div>
+        );
+      })}
+    </div>
+  </div>
+</section>

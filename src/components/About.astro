@@ -1,0 +1,79 @@
+---
+import { me, principles } from "../data/site";
+---
+
+<section id="about" class="section relative" data-tint="ember">
+  <div class="shell-wide">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
+      <!-- Left: heading + bio -->
+      <div class="lg:col-span-7">
+        <p class="eyebrow mb-6 reveal">01 — Sobre mí</p>
+        <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+          Un ingeniero que une <span class="italic-accent ember-text">IA</span>, datos y <span class="italic-accent sage-text">producto</span>.
+        </h2>
+
+        <div class="mt-8 space-y-5 text-lg text-ink-300 leading-relaxed max-w-2xl">
+          <p class="reveal d-2">
+            Soy <strong class="text-ink-50 font-semibold">{me.name}</strong>, estudiante de
+            <strong class="text-ink-50 font-semibold"> Ingeniería Informática</strong> con mención en Computación en la
+            <strong class="text-ink-50 font-semibold"> {me.university}</strong>.
+          </p>
+          <p class="reveal d-3 text-ink-400">
+            Combino <span class="ember-text font-medium">análisis de datos</span>,
+            <span class="sage-text font-medium">programación</span> y
+            <span class="ember-text font-medium">diseño de sistemas</span> para construir tecnología con impacto real.
+            He trabajado en visión por computador, machine learning, robótica y producto web.
+          </p>
+          <p class="reveal d-4 text-ink-400">
+            Creo en el aprendizaje continuo y en cuidar el detalle: este sitio está hecho con
+            <span class="font-mono text-ember-300 bg-ember-500/10 px-1.5 py-0.5 rounded text-sm">Astro</span> +
+            <span class="font-mono text-sage-300 bg-sage-500/10 px-1.5 py-0.5 rounded text-sm">Tailwind</span>,
+            tipografía editorial y mucho café.
+          </p>
+        </div>
+
+        <!-- Principles -->
+        <ul class="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 reveal d-5" role="list">
+          {principles.map((p) => (
+            <li class="card p-5 lift elev-1 hover:elev-3 hover:border-ember-500/30">
+              <h3 class="font-display text-base text-ink-100 mb-2">{p.title}</h3>
+              <p class="text-sm text-ink-400 leading-relaxed">{p.body}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Right: photo + stats -->
+      <div class="lg:col-span-5 space-y-5">
+        <div class="relative aspect-[4/5] rounded-2xl overflow-hidden reveal d-2 spotlight tilt elev-3" data-tilt="4">
+          <div class="absolute inset-0 bg-gradient-to-br from-ember-500/20 via-transparent to-sage-500/10 mix-blend-overlay z-10" aria-hidden="true"></div>
+          <img src="/images/sebastianmalbaceda-github.jpg" alt={`${me.shortName} — foto de perfil`} class="w-full h-full object-cover" width="400" height="500" loading="lazy" decoding="async" />
+          <div class="absolute bottom-3 left-3 right-3 z-20 glass-strong rounded-xl p-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <p class="text-sm font-display font-semibold text-ink-50 truncate">{me.shortName}</p>
+                <p class="text-[10px] font-mono text-ink-500 uppercase tracking-wider mt-0.5 truncate">{me.role}</p>
+              </div>
+              <span class="px-2 py-0.5 text-[10px] font-mono rounded bg-ember-500/20 text-ember-300 border border-ember-500/30 tracking-wider shrink-0">UAB · 2022</span>
+            </div>
+          </div>
+        </div>
+
+        <ul class="grid grid-cols-3 gap-2 reveal d-3" role="list">
+          <li class="text-center p-3 md:p-4 rounded-xl border border-ink-800/60 bg-ink-900/30">
+            <p class="text-2xl md:text-3xl font-display font-semibold ember-text tabular-nums" data-count={me.stats.projects}>0</p>
+            <p class="text-[10px] font-mono uppercase tracking-wider text-ink-500 mt-1">Proyectos</p>
+          </li>
+          <li class="text-center p-3 md:p-4 rounded-xl border border-ink-800/60 bg-ink-900/30">
+            <p class="text-2xl md:text-3xl font-display font-semibold sage-text tabular-nums" data-count={me.stats.technologies}>0</p>
+            <p class="text-[10px] font-mono uppercase tracking-wider text-ink-500 mt-1">Stack</p>
+          </li>
+          <li class="text-center p-3 md:p-4 rounded-xl border border-ink-800/60 bg-ink-900/30">
+            <p class="text-2xl md:text-3xl font-display font-semibold text-ink-100 tabular-nums">{me.stats.yearStarted}</p>
+            <p class="text-[10px] font-mono uppercase tracking-wider text-ink-500 mt-1">UAB</p>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

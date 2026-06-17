@@ -1,57 +1,92 @@
 ---
 export interface Props {
-    items: string[];
-    speed?: "normal" | "slow" | "fast";
-    reverse?: boolean;
-    /** Show separator dots between items. */
-    separator?: boolean;
-    class?: string;
+  items: string[];
+  class?: string;
 }
-
-const {
-    items,
-    speed = "normal",
-    reverse = false,
-    separator = true,
-    class: className = "",
-} = Astro.props;
-
-const speedMap: Record<NonNullable<Props["speed"]>, string> = {
-    normal: "40s",
-    slow: "60s",
-    fast: "25s",
-};
-const duration = speedMap[speed];
-const animation = reverse ? "animate-marquee-reverse" : "animate-marquee";
-// Duplicate items twice for seamless loop
-const sequence = [...items, ...items];
+const { items, class: className = "" } = Astro.props;
+// Build enough slots to populate the cylinder; repeat the source list
+const slots = [...items, ...items, ...items];
 ---
 
-<div
-    class={`relative marquee-mask overflow-hidden ${className}`}
-    aria-label="Tecnologías"
-    role="region"
->
-    <div
-        class={`flex w-max items-center gap-8 ${animation}`}
-        style={`animation-duration: ${duration};`}
-    >
-        {
-            sequence.map((item) => (
-                <span class="flex items-center gap-8 shrink-0">
-                    <span class="font-display text-2xl md:text-3xl font-semibold text-zinc-500 hover:text-zinc-200 transition-colors whitespace-nowrap">
-                        {item}
-                    </span>
-                    {separator && (
-                        <span
-                            class="text-zinc-700 text-2xl select-none"
-                            aria-hidden="true"
-                        >
-                            ✦
-                        </span>
-                    )}
-                </span>
-            ))
-        }
-    </div>
+<div class={`tech-ring-wrap ${className}`} role="region" aria-label="Tecnologías">
+  <div class="tech-ring" style={`--n:${slots.length};`}>
+    {slots.map((item, i) => (
+      <span class="tech-ring-item" style={`--i:${i};`} aria-hidden={i >= items.length ? "true" : undefined}>
+        <span class="font-display text-xl md:text-2xl font-medium whitespace-nowrap text-ink-200">{item}</span>
+        <span class="text-ember-500/70 ml-4 select-none" aria-hidden="true">✦</span>
+      </span>
+    ))}
+  </div>
 </div>
+
+<style>
+  .tech-ring-wrap {
+    position: relative;
+    height: 88px;
+    overflow: hidden;
+    /* Vertical fade so items appear/disappear softly at top & bottom */
+    mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
+  }
+  .tech-ring {
+    position: absolute;
+    inset: 0;
+    perspective: 1200px;
+    perspective-origin: 50% 50%;
+    transform-style: preserve-3d;
+    animation: ring-spin 42s linear infinite;
+  }
+  .tech-ring:hover {
+    animation-play-state: paused;
+  }
+  .tech-ring-item {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    transform-origin: center;
+    /* Place around a vertical cylinder (axis = X). Each item is rotated then pushed out. */
+    --angle: calc(360deg / var(--n) * var(--i));
+    --radius: 180px;
+    transform:
+      translate(-50%, -50%)
+      rotateX(var(--angle))
+      translateZ(var(--radius))
+      rotateX(calc(-1 * var(--angle)));
+    transition: filter 0.4s ease;
+    filter: blur(0.4px);
+  }
+  /* The front-facing items (closest to viewer) are crisp, others blur softly */
+  .tech-ring-item:hover {
+    filter: blur(0);
+  }
+
+  @keyframes ring-spin {
+    from { transform: rotateX(0deg); }
+    to   { transform: rotateX(-360deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tech-ring { animation: none; }
+    .tech-ring-wrap {
+      height: auto;
+      mask-image: none;
+      -webkit-mask-image: none;
+    }
+    .tech-ring {
+      position: static;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem 1.25rem;
+      perspective: none;
+    }
+    .tech-ring-item {
+      position: static;
+      transform: none;
+      filter: none;
+    }
+  }
+</style>

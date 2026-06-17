@@ -1,0 +1,35 @@
+---
+import BlogCard from "./BlogCard.astro";
+import { getCollection } from "astro:content";
+
+const posts = (await getCollection("blog", ({ data }) => !data.draft))
+  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
+  .slice(0, 3);
+---
+
+<section id="writing" class="section relative" data-tint="ember">
+  <div class="shell-wide">
+    <div class="flex items-end justify-between flex-wrap gap-4 mb-14 md:mb-16">
+      <div>
+        <p class="eyebrow mb-6 reveal">06 — Escritos</p>
+        <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+          Notas y <span class="italic-accent ember-text">aprendizajes</span>.
+        </h2>
+      </div>
+      <a href="/blog" class="hidden sm:inline-flex items-center gap-1.5 text-sm text-ink-400 hover:text-ink-100 transition-colors reveal d-2">
+        Ver todos
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+      </a>
+    </div>
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 lg:gap-x-8 gap-y-10">
+        {posts.map((post, i) => <BlogCard post={post} index={i} />)}
+      </div>
+    ) : (
+      <div class="text-center py-16">
+        <p class="text-ink-500">Próximamente nuevos artículos.</p>
+      </div>
+    )}
+  </div>
+</section>

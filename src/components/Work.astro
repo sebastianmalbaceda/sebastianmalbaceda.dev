@@ -1,0 +1,26 @@
+---
+import { projects } from "../data/site";
+import ProjectCard from "./ProjectCard.astro";
+
+const featured = projects.filter((p) => p.featured);
+---
+
+<section id="work" class="section relative" data-tint="gold">
+  <div class="shell-wide">
+    <div class="flex items-end justify-between flex-wrap gap-6 mb-14 md:mb-16">
+      <div>
+        <p class="eyebrow mb-6 reveal">02 — Trabajo seleccionado</p>
+        <h2 class="display text-4xl sm:text-5xl md:text-6xl text-ink-50 max-w-2xl reveal d-1">
+          Cosas que he <span class="italic-accent ember-text">construido</span>.
+        </h2>
+      </div>
+      <p class="text-ink-400 max-w-sm leading-relaxed reveal d-2">
+        Una selección curada que combina inteligencia artificial, visión por computador, robótica y producto web.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 auto-rows-fr">
+      {featured.map((project, i) => <ProjectCard project={project} index={i} large={i === 0 || i === 3 || i === 4} />)}
+    </div>
+  </div>
+</section>

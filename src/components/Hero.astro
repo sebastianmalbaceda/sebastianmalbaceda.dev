@@ -1,297 +1,90 @@
 ---
-import { socialLinks, personalInfo } from "../data/site";
-import StatusBadge from "./StatusBadge.astro";
+import { me, social } from "../data/site";
 ---
 
-<section
-    id="hero"
-    class="relative min-h-screen flex items-center overflow-hidden scroll-mt-16 pt-32 md:pt-28 pb-16 md:pb-20"
-    data-tint="blue"
->
-    <!-- Decorative SVG layer (with mouse parallax) -->
-    <svg
-        class="absolute inset-0 w-full h-full pointer-events-none parallax"
-        data-parallax="20"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-    >
-        <defs>
-            <radialGradient id="hero-glow-1" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="rgb(59,130,246)" stop-opacity="0.35" />
-                <stop offset="100%" stop-color="rgb(59,130,246)" stop-opacity="0" />
-            </radialGradient>
-            <radialGradient id="hero-glow-2" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="rgb(139,92,246)" stop-opacity="0.3" />
-                <stop offset="100%" stop-color="rgb(139,92,246)" stop-opacity="0" />
-            </radialGradient>
-            <radialGradient id="hero-glow-3" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="rgb(217,70,239)" stop-opacity="0.25" />
-                <stop offset="100%" stop-color="rgb(217,70,239)" stop-opacity="0" />
-            </radialGradient>
-            <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="rgb(59,130,246)" stop-opacity="0" />
-                <stop offset="50%" stop-color="rgb(59,130,246)" stop-opacity="0.5" />
-                <stop offset="100%" stop-color="rgb(139,92,246)" stop-opacity="0" />
-            </linearGradient>
-        </defs>
+<section id="hero" class="relative min-h-screen flex items-center overflow-hidden scroll-mt-16 pt-32 md:pt-28 pb-20" data-tint="ember">
+  <div class="absolute inset-0 pointer-events-none parallax" data-parallax="18" aria-hidden="true">
+    <div class="absolute top-[10%] left-[5%] w-[480px] h-[480px] rounded-full blur-[120px] opacity-40 animate-breathe" style="background: radial-gradient(circle, rgba(249,115,22,0.5), transparent 70%);"></div>
+    <div class="absolute top-[40%] right-[8%] w-[420px] h-[420px] rounded-full blur-[120px] opacity-30 animate-float" style="background: radial-gradient(circle, rgba(251,191,36,0.4), transparent 70%);"></div>
+    <div class="absolute bottom-[8%] left-[35%] w-[360px] h-[360px] rounded-full blur-[110px] opacity-20" style="background: radial-gradient(circle, rgba(74,222,128,0.4), transparent 70%);"></div>
+  </div>
 
-        <circle cx="50%" cy="35%" r="400" fill="url(#hero-glow-1)" />
-        <circle cx="85%" cy="65%" r="300" fill="url(#hero-glow-2)" />
-        <circle cx="15%" cy="70%" r="250" fill="url(#hero-glow-3)" />
+  <div class="absolute inset-0 pointer-events-none opacity-[0.04]" aria-hidden="true" style="background-image: linear-gradient(rgba(245,245,244,1) 1px, transparent 1px), linear-gradient(90deg, rgba(245,245,244,1) 1px, transparent 1px); background-size: 64px 64px;"></div>
 
-        <g opacity="0.4">
-            <line x1="0" y1="20%" x2="100%" y2="20%" stroke="url(#line-grad)" stroke-width="1" />
-            <line x1="0" y1="80%" x2="100%" y2="80%" stroke="url(#line-grad)" stroke-width="1" />
-        </g>
-
-        <g class="animate-float-slow" opacity="0.6">
-            <circle cx="10%" cy="30%" r="1.5" fill="rgb(96,165,250)" />
-            <circle cx="90%" cy="20%" r="2" fill="rgb(167,139,250)" />
-            <circle cx="85%" cy="80%" r="1.5" fill="rgb(244,114,182)" />
-        </g>
-    </svg>
-
-    <div class="section-container relative z-10 w-full">
-        <div class="max-w-5xl mx-auto">
-            <!-- Top: status + meta row -->
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-10 md:mb-12">
-                <div class="reveal">
-                    <StatusBadge label={personalInfo.status} />
-                </div>
-                <div
-                    class="hidden md:flex items-center gap-2 text-xs font-mono text-zinc-500 reveal reveal-delay-1"
-                >
-                    <span class="relative flex h-2 w-2" aria-hidden="true">
-                        <span class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    <span>Barcelona, ES · {new Date().toLocaleDateString("es-ES", { month: "short", year: "numeric" })}</span>
-                </div>
-            </div>
-
-            <!-- Main content: 2-col asymmetric layout -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
-                <!-- Left: text -->
-                <div class="lg:col-span-8">
-                    <p
-                        class="text-xs md:text-sm font-mono uppercase tracking-[0.25em] text-zinc-500 mb-5 md:mb-6 reveal reveal-delay-1"
-                    >
-                        {personalInfo.role} <span class="text-zinc-700 mx-1">/</span> UAB
-                    </p>
-
-                    <h1
-                        class="font-display font-bold text-zinc-100 leading-[0.95] tracking-[-0.04em] reveal reveal-delay-2"
-                    >
-                        <span class="block text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6rem]">
-                            Construyo
-                        </span>
-                        <span class="block text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6rem]">
-                            <span class="gradient-text">software</span>
-                            <span class="text-zinc-700 mx-2 sm:mx-3">que</span>
-                        </span>
-                        <span class="block text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] xl:text-[6rem] mt-1">
-                            <span class="gradient-text-warm">piensa</span>
-                            <span class="text-zinc-500 text-3xl sm:text-4xl md:text-5xl lg:text-6xl align-middle mx-2 sm:mx-3">·</span>
-                            <span class="gradient-text-cool">siente</span>
-                        </span>
-                    </h1>
-
-                    <p
-                        class="mt-7 md:mt-8 text-base md:text-lg lg:text-xl text-zinc-400 max-w-xl leading-relaxed reveal reveal-delay-3"
-                    >
-                        {personalInfo.tagline}
-                    </p>
-
-                    <div
-                        class="mt-8 md:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 reveal reveal-delay-4"
-                    >
-                        <a
-                            href="#projects"
-                            class="magnetic group inline-flex items-center justify-center gap-2 px-5 py-3 bg-zinc-100 text-zinc-900 hover:bg-white rounded-full font-medium transition-all duration-300 shadow-[0_10px_40px_-10px_rgba(255,255,255,0.3)] hover:shadow-[0_20px_60px_-15px_rgba(59,130,246,0.5)]"
-                            data-magnetic="0.3"
-                            data-cursor="Ver"
-                        >
-                            Ver proyectos
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2.5"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                                aria-hidden="true"
-                            >
-                                <path d="M7 17 17 7"></path>
-                                <path d="M7 7h10v10"></path>
-                            </svg>
-                        </a>
-                        <a
-                            href="#contact"
-                            class="group inline-flex items-center justify-center gap-2 px-5 py-3 border border-zinc-700 hover:border-zinc-500 text-zinc-200 rounded-full font-medium transition-all duration-300 hover:bg-zinc-900/50"
-                            data-cursor="↓"
-                        >
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" aria-hidden="true"></span>
-                            Disponible para colaborar
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Right: terminal card (decorative) -->
-                <div
-                    class="lg:col-span-4 reveal reveal-delay-3 hidden lg:block"
-                    aria-hidden="true"
-                >
-                    <div class="tilt spotlight relative" data-tilt="6">
-                        <div
-                            class="absolute -inset-2 rounded-2xl bg-gradient-to-br from-blue-500/20 via-violet-500/15 to-fuchsia-500/20 blur-2xl opacity-60"
-                        ></div>
-                        <div class="relative terminal-window">
-                            <div class="terminal-dots">
-                                <span class="terminal-dot bg-red-400/70"></span>
-                                <span class="terminal-dot bg-amber-400/70"></span>
-                                <span class="terminal-dot bg-emerald-400/70"></span>
-                                <span class="ml-2 text-[10px] font-mono text-zinc-600">
-                                    ~/sebastian
-                                </span>
-                                <span class="ml-auto text-[10px] font-mono text-zinc-600">
-                                    main
-                                </span>
-                            </div>
-                            <div class="p-4 text-left text-xs leading-relaxed">
-                                <p>
-                                    <span class="text-emerald-400">$</span>
-                                    <span class="text-zinc-500 ml-2">whoami</span>
-                                </p>
-                                <p class="text-zinc-200 mt-1">engineer</p>
-                                <p class="mt-3">
-                                    <span class="text-emerald-400">$</span>
-                                    <span class="text-zinc-500 ml-2">cat stack.json</span>
-                                </p>
-                                <pre class="text-zinc-300 mt-1 font-mono text-[11px] leading-relaxed">{`{
-  "name": "Sebastián",
-  "focus": ["AI", "ML", "CV"],
-  "stack": [
-    "TypeScript",
-    "Python",
-    "PyTorch"
-  ],
-  "status": "open"
-}`}</pre>
-                                <p class="mt-2">
-                                    <span class="text-emerald-400">$</span>
-                                    <span
-                                        class="inline-block w-2 h-3.5 bg-zinc-300 ml-2 align-middle animate-caret-blink"
-                                    ></span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Bottom: social row + scroll hint -->
-            <div
-                class="mt-14 md:mt-16 flex flex-col md:flex-row items-start md:items-end justify-between gap-6 reveal reveal-delay-5"
-            >
-                <ul class="flex items-center gap-1" role="list">
-                    <li>
-                        <a
-                            href={socialLinks.github}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 transition-all"
-                            aria-label="GitHub (se abre en una pestaña nueva)"
-                            data-cursor="↗ GitHub"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                            >
-                                <path
-                                    d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"
-                                ></path>
-                            </svg>
-                            <span class="hidden sm:inline">GitHub</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href={socialLinks.linkedin}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            class="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 transition-all"
-                            aria-label="LinkedIn (se abre en una pestaña nueva)"
-                            data-cursor="↗ LinkedIn"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                            >
-                                <path
-                                    d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
-                                ></path>
-                            </svg>
-                            <span class="hidden sm:inline">LinkedIn</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a
-                            href={`mailto:${socialLinks.email}`}
-                            class="inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900/50 transition-all"
-                            aria-label={`Enviar email a ${socialLinks.email}`}
-                            data-cursor="Copiar email"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            >
-                                <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                            </svg>
-                            <span class="hidden sm:inline">Email</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <div
-                    class="flex items-center gap-2 text-xs text-zinc-500 font-mono"
-                    aria-hidden="true"
-                >
-                    <span>scroll</span>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        class="animate-bounce"
-                    >
-                        <path d="M6 9 12 15 18 9"></path>
-                    </svg>
-                </div>
-            </div>
+  <div class="shell-wide w-full relative z-10">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-12 md:mb-16">
+        <div class="reveal inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass border border-sage-500/20 bg-sage-500/5 text-sage-300 font-mono text-xs">
+          <span class="relative flex h-2 w-2" aria-hidden="true">
+            <span class="absolute inline-flex h-full w-full rounded-full bg-sage-400 opacity-75 animate-ping"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-sage-400"></span>
+          </span>
+          {me.status}
         </div>
+        <div class="hidden md:flex items-center gap-2 text-xs font-mono text-ink-500 reveal d-1">
+          <span>{me.location}</span>
+          <span class="text-ink-700">·</span>
+          <span data-clock>--:--</span>
+          <span class="text-ink-700">·</span>
+          <span>{new Date().toLocaleDateString("es-ES", { month: "short", year: "numeric" })}</span>
+        </div>
+      </div>
+
+      <div class="max-w-5xl">
+        <p class="eyebrow mb-7 reveal d-1">{me.role} <span class="text-ink-700">/</span> {me.university}</p>
+
+        <h1 class="display text-[clamp(2.75rem,9vw,7.5rem)] text-ink-50 reveal d-2">
+          Construyo software con
+          <br class="hidden sm:block" />
+          <span class="italic-accent ember-text">IA</span>,
+          <span class="italic-accent sage-text">datos</span> y
+          <span class="italic-accent ember-text">producto</span>.
+        </h1>
+
+        <p class="mt-8 md:mt-10 text-lg md:text-xl text-ink-400 max-w-2xl leading-relaxed reveal d-3">
+          {me.tagline}
+        </p>
+
+        <div class="mt-10 md:mt-12 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 reveal d-4">
+          <a href="#work" class="ripple magnetic btn-ember group elev-ember relative" data-magnetic="0.3" data-ripple="light" data-cursor="Ver trabajo" id="hero-cta">
+            Ver trabajo
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>
+            <span class="sparkle-layer pointer-events-none absolute inset-0 overflow-hidden rounded-full" aria-hidden="true"></span>
+          </a>
+          <a href="#contact" class="ripple btn-ghost" data-cursor="↓">
+            <span class="w-1.5 h-1.5 rounded-full bg-sage-400 animate-pulse-soft" aria-hidden="true"></span>
+            Hablemos de tu proyecto
+          </a>
+        </div>
+      </div>
+
+      <div class="mt-16 md:mt-24 flex flex-col md:flex-row items-start md:items-end justify-between gap-6 reveal d-5">
+        <ul class="flex items-center gap-1" role="list">
+          <li>
+            <a href={social.github} target="_blank" rel="noopener noreferrer" class="magnetic inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-ink-400 hover:text-ink-50 hover:bg-ink-900/50 transition-all" aria-label="GitHub (se abre en una pestaña nueva)" data-cursor="↗ GitHub" data-magnetic="0.2">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"></path></svg>
+              <span class="hidden sm:inline">GitHub</span>
+            </a>
+          </li>
+          <li>
+            <a href={social.linkedin} target="_blank" rel="noopener noreferrer" class="magnetic inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-ink-400 hover:text-ink-50 hover:bg-ink-900/50 transition-all" aria-label="LinkedIn (se abre en una pestaña nueva)" data-cursor="↗ LinkedIn" data-magnetic="0.2">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path></svg>
+              <span class="hidden sm:inline">LinkedIn</span>
+            </a>
+          </li>
+          <li>
+            <a href={`mailto:${social.email}`} class="magnetic inline-flex items-center gap-2 px-3 py-2 rounded-full text-sm text-ink-400 hover:text-ink-50 hover:bg-ink-900/50 transition-all" aria-label={`Enviar email a ${social.email}`} data-cursor="Escribir" data-magnetic="0.2">
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+              <span class="hidden sm:inline">Email</span>
+            </a>
+          </li>
+        </ul>
+
+        <div class="flex items-center gap-2 text-xs text-ink-500 font-mono" aria-hidden="true">
+          <span>scroll</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-bounce"><path d="M6 9 12 15 18 9"></path></svg>
+        </div>
+      </div>
     </div>
+  </div>
 </section>

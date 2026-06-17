@@ -1,0 +1,437 @@
+---
+// All client-side effects, single source of truth:
+//  - Custom cursor (dot + ring + label)
+//  - Reveal on scroll (staggered)
+//  - Magnetic CTAs
+//  - Spotlight on .spotlight
+//  - 3D tilt on .tilt
+//  - Ripple on .ripple
+//  - Counters [data-count]
+//  - Live clock [data-clock]
+//  - Mouse parallax [data-parallax]
+//  - Section-tint shift [data-tint]
+//  - Re-init on view transitions
+---
+
+<div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
+<div id="cursor-ring" class="cursor-ring" aria-hidden="true"></div>
+<div id="cursor-label" class="cursor-label" aria-hidden="true"></div>
+
+<script>
+  const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine = () => matchMedia("(pointer:fine)").matches;
+
+  function setupCursor() {
+    if (!fine() || reduce()) return;
+    const dot = document.getElementById("cursor-dot");
+    const ring = document.getElementById("cursor-ring");
+    const label = document.getElementById("cursor-label");
+    if (!dot || !ring || !label) return;
+    document.body.classList.add("has-cursor");
+
+    let mx = 0, my = 0, rx = 0, ry = 0, lx = 0, ly = 0;
+    const onMove = (e: MouseEvent) => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
+    };
+    const loop = () => {
+      rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+      ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
+      const show = label.classList.contains("show");
+      const tx = mx, ty = show ? my - 30 : my;
+      lx += (tx - lx) * 0.12; ly += (ty - ly) * 0.12;
+      label.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
+      requestAnimationFrame(loop);
+    };
+    const find = (el: Element | null) => {
+      const t = el?.closest<HTMLElement>("[data-cursor], a, button, [role='button'], .magnetic, input, textarea, label");
+      if (!t) return null;
+      const text = t.dataset.cursor ?? null;
+      let v: "hover" | "view" = "hover";
+      if (t.matches("a, button, [role='button'], .magnetic")) v = t.tagName === "A" && t.hasAttribute("target") ? "view" : "hover";
+      return { t, text, v };
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseover", (e) => {
+      const f = find(e.target as Element);
+      if (f) {
+        ring.classList.toggle("hover", f.v === "hover");
+        ring.classList.toggle("view", f.v === "view");
+        if (f.text) { label.textContent = f.text; label.classList.add("show"); }
+        else label.classList.remove("show");
+      } else {
+        ring.classList.remove("hover", "view");
+        label.classList.remove("show");
+      }
+    });
+    document.addEventListener("mousedown", () => ring.classList.add("press"));
+    document.addEventListener("mouseup", () => ring.classList.remove("press"));
+    document.addEventListener("mouseleave", () => { ring.style.opacity = "0"; dot.style.opacity = "0"; label.style.opacity = "0"; });
+    document.addEventListener("mouseenter", () => { ring.style.opacity = "1"; dot.style.opacity = "1"; label.style.opacity = ""; });
+    loop();
+  }
+
+  function setupReveal() {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+      }
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+    document.querySelectorAll(".reveal:not(.in)").forEach((el) => io.observe(el));
+  }
+
+  function setupMagnetic() {
+    if (reduce()) return;
+    document.querySelectorAll<HTMLElement>(".magnetic").forEach((el) => {
+      if (el.dataset.mBound === "1") return;
+      el.dataset.mBound = "1";
+      const s = Number(el.dataset.magnetic ?? 0.3);
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * s}px, ${(e.clientY - r.top - r.height / 2) * s}px)`;
+      });
+      el.addEventListener("pointerleave", () => { el.style.transform = "translate(0,0)"; });
+    });
+  }
+
+  function setupSpotlight() {
+    if (reduce()) return;
+    document.querySelectorAll<HTMLElement>(".spotlight").forEach((el) => {
+      if (el.dataset.sBound === "1") return;
+      el.dataset.sBound = "1";
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--mx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
+      });
+    });
+    // Interior glow follow for article cards
+    document.querySelectorAll<HTMLElement>("article.group, a.group").forEach((el) => {
+      if (el.dataset.gBound === "1") return;
+      el.dataset.gBound = "1";
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--cx", `${((e.clientX - r.left) / r.width) * 100}%`);
+        el.style.setProperty("--cy", `${((e.clientY - r.top) / r.height) * 100}%`);
+      });
+    });
+  }
+
+  function setupTilt() {
+    if (reduce()) return;
+    document.querySelectorAll<HTMLElement>(".tilt").forEach((el) => {
+      if (el.dataset.tBound === "1") return;
+      el.dataset.tBound = "1";
+      const max = Number(el.dataset.tilt ?? 6);
+      el.addEventListener("pointermove", (e) => {
+        const r = el.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+        el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * 2 * max}deg) rotateY(${(x - 0.5) * 2 * max}deg)`;
+      });
+      el.addEventListener("pointerleave", () => { el.style.transform = "perspective(900px) rotateX(0) rotateY(0)"; });
+    });
+  }
+
+  function setupRipple() {
+    if (reduce()) return;
+    document.querySelectorAll<HTMLElement>(".ripple").forEach((el) => {
+      if (el.dataset.rBound === "1") return;
+      el.dataset.rBound = "1";
+      el.addEventListener("pointerdown", (e) => {
+        const r = el.getBoundingClientRect();
+        const size = Math.max(r.width, r.height);
+        const w = document.createElement("span");
+        w.className = "ripple-wave" + (el.dataset.ripple === "light" ? " light" : "");
+        w.style.width = w.style.height = `${size}px`;
+        w.style.left = `${e.clientX - r.left - size / 2}px`;
+        w.style.top = `${e.clientY - r.top - size / 2}px`;
+        el.appendChild(w);
+        w.addEventListener("animationend", () => w.remove(), { once: true });
+      });
+    });
+  }
+
+  function setupCounters() {
+    const els = document.querySelectorAll<HTMLElement>("[data-count]");
+    if (!els.length) return;
+    const animate = (el: HTMLElement) => {
+      const target = Number(el.dataset.count ?? 0);
+      const dur = 1500; const start = performance.now();
+      const tick = (now: number) => {
+        const t = Math.min((now - start) / dur, 1);
+        el.textContent = String(Math.round(target * (1 - Math.pow(1 - t, 3))));
+        if (t < 1) requestAnimationFrame(tick); else el.textContent = String(target);
+      };
+      requestAnimationFrame(tick);
+    };
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) { if (e.isIntersecting) { animate(e.target as HTMLElement); io.unobserve(e.target); } }
+    }, { threshold: 0.4 });
+    els.forEach((el) => io.observe(el));
+  }
+
+  function setupClock() {
+    const els = document.querySelectorAll<HTMLElement>("[data-clock]");
+    if (!els.length) return;
+    const update = () => {
+      const t = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false });
+      els.forEach((el) => { el.textContent = t; });
+    };
+    update();
+    setInterval(update, 1000);
+  }
+
+  function setupParallax() {
+    if (reduce()) return;
+    const els = document.querySelectorAll<HTMLElement>("[data-parallax]");
+    if (!els.length) return;
+    let mx = 0, my = 0, rx = 0, ry = 0, raf = 0;
+    const onMove = (e: MouseEvent) => {
+      mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2;
+      if (!raf) raf = requestAnimationFrame(loop);
+    };
+    const loop = () => {
+      rx += (mx - rx) * 0.08; ry += (my - ry) * 0.08;
+      els.forEach((el) => {
+        const s = parseFloat(el.dataset.parallax ?? "20");
+        el.style.setProperty("--px", `${rx * s}px`);
+        el.style.setProperty("--py", `${ry * s}px`);
+      });
+      if (Math.abs(mx - rx) > 0.001 || Math.abs(my - ry) > 0.001) raf = requestAnimationFrame(loop);
+      else raf = 0;
+    };
+    document.addEventListener("mousemove", onMove);
+  }
+
+  function setupScrollProgress() {
+    const bar = document.getElementById("scroll-progress");
+    const top = document.getElementById("back-to-top");
+    if (!bar) return;
+    let ticking = false;
+    const update = () => {
+      const h = document.documentElement;
+      const ratio = (h.scrollHeight - h.clientHeight) > 0 ? h.scrollTop / (h.scrollHeight - h.clientHeight) : 0;
+      bar.style.transform = `scaleX(${ratio})`;
+      bar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+      if (top) {
+        top.classList.toggle("opacity-0", ratio < 0.04);
+        top.classList.toggle("translate-y-4", ratio < 0.04);
+        top.classList.toggle("pointer-events-none", ratio < 0.04);
+      }
+      ticking = false;
+    };
+    window.addEventListener("scroll", () => { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
+    update();
+    top?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+  }
+
+  function setupMobileMenu() {
+    const toggle = document.getElementById("menu-toggle");
+    const menu = document.getElementById("mobile-menu");
+    if (!toggle || !menu) return;
+    const setOpen = (open: boolean) => {
+      menu.classList.toggle("hidden", !open);
+      toggle.setAttribute("aria-expanded", String(open));
+      document.body.style.overflow = open ? "hidden" : "";
+    };
+    toggle.addEventListener("click", () => setOpen(menu.classList.contains("hidden")));
+    menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !menu.classList.contains("hidden")) { setOpen(false); (toggle as HTMLElement).focus(); }
+    });
+    window.matchMedia("(min-width: 768px)").addEventListener("change", (e) => { if (e.matches) setOpen(false); });
+  }
+
+  function setupCommandPalette() {
+    const palette = document.getElementById("cmd-palette");
+    const trigger = document.getElementById("cmd-trigger");
+    const input = document.getElementById("cmd-input") as HTMLInputElement | null;
+    const results = document.getElementById("cmd-results");
+    const backdrop = document.getElementById("cmd-backdrop");
+    if (!palette || !trigger || !input || !results) return;
+    const email = "sebastian.malbaceda.leyva@gmail.com";
+
+    const vcard = () => {
+      const blob = new Blob(["BEGIN:VCARD\r\nVERSION:3.0\r\nN:Malbaceda Leyva;Sebastián;;;\r\nFN:Sebastián Malbaceda Leyva\r\nTITLE:Estudiante de Ingeniería Informática\r\nORG:Universitat Autònoma de Barcelona\r\nEMAIL;TYPE=INTERNET:" + email + "\r\nURL:https://sebastianmalbaceda.dev\r\nEND:VCARD\r\n"], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob); const a = document.createElement("a");
+      a.href = url; a.download = "sebastian-malbaceda.vcf"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    };
+
+    type Cmd = { label: string; hint?: string; group: string; action: () => void };
+    const cmds: Cmd[] = [
+      { label: "Ir a Inicio", group: "Navegación", action: () => location.href = "/" },
+      { label: "Ir a Sobre mí", group: "Navegación", action: () => location.href = "/#about" },
+      { label: "Ir a Proyectos", group: "Navegación", action: () => location.href = "/#work" },
+      { label: "Ir a Capacidades", group: "Navegación", action: () => location.href = "/#capabilities" },
+      { label: "Ir a Trayectoria", group: "Navegación", action: () => location.href = "/#journey" },
+      { label: "Ir a Ahora", group: "Navegación", action: () => location.href = "/#now" },
+      { label: "Ir a Escritos", group: "Navegación", action: () => location.href = "/#writing" },
+      { label: "Ir a Contacto", group: "Navegación", action: () => location.href = "/#contact" },
+      { label: "Abrir GitHub", hint: "@sebastianmalbaceda", group: "Social", action: () => window.open("https://github.com/sebastianmalbaceda", "_blank", "noopener") },
+      { label: "Abrir LinkedIn", group: "Social", action: () => window.open("https://www.linkedin.com/in/sebastiánmalbaceda/", "_blank", "noopener") },
+      { label: "Copiar email", hint: email, group: "Acciones", action: () => navigator.clipboard.writeText(email) },
+      { label: "Escribir email", group: "Acciones", action: () => location.href = `mailto:${email}` },
+      { label: "Descargar vCard", hint: "Contacto .vcf", group: "Acciones", action: vcard },
+    ];
+
+    let active = 0; let filtered: Cmd[] = cmds;
+    const render = () => {
+      const q = input.value.toLowerCase().trim();
+      filtered = q ? cmds.filter((c) => (c.label + " " + c.group + " " + (c.hint ?? "")).toLowerCase().includes(q)) : cmds;
+      active = 0; results.innerHTML = "";
+      const groups = new Map<string, Cmd[]>();
+      filtered.forEach((c) => { if (!groups.has(c.group)) groups.set(c.group, []); groups.get(c.group)!.push(c); });
+      for (const [group, items] of groups) {
+        const h = document.createElement("li");
+        h.className = "px-2 pt-3 pb-1 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600";
+        h.textContent = group; results.appendChild(h);
+        items.forEach((cmd) => {
+          const idx = filtered.indexOf(cmd);
+          const li = document.createElement("li");
+          li.setAttribute("role", "option"); li.dataset.index = String(idx);
+          li.className = "px-3 py-2.5 rounded-lg cursor-pointer flex items-center justify-between gap-3 transition-colors aria-selected:bg-ink-800/70";
+          li.innerHTML = `<div class="flex flex-col"><span class="text-sm text-ink-100">${cmd.label}</span>${cmd.hint ? `<span class="text-[11px] text-ink-500">${cmd.hint}</span>` : ""}</div>`;
+          li.addEventListener("click", () => { cmd.action(); close(); });
+          li.addEventListener("mouseenter", () => { active = idx; update(); });
+          results.appendChild(li);
+        });
+      }
+      update();
+    };
+    const update = () => {
+      results.querySelectorAll<HTMLElement>("[role='option']").forEach((el, i) => {
+        if (i === active) { el.setAttribute("aria-selected", "true"); el.scrollIntoView({ block: "nearest" }); }
+        else el.removeAttribute("aria-selected");
+      });
+    };
+    const open = () => { palette.classList.remove("hidden"); palette.classList.add("flex"); document.body.style.overflow = "hidden"; input.value = ""; render(); requestAnimationFrame(() => input.focus()); };
+    const close = () => { palette.classList.add("hidden"); palette.classList.remove("flex"); document.body.style.overflow = ""; };
+
+    trigger.addEventListener("click", open);
+    backdrop?.addEventListener("click", close);
+    document.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); palette.classList.contains("hidden") ? open() : close(); return; }
+      if (e.key === "Escape" && !palette.classList.contains("hidden")) { close(); return; }
+      if (palette.classList.contains("hidden")) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, filtered.length - 1); update(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); update(); }
+      else if (e.key === "Enter") { e.preventDefault(); filtered[active]?.action(); close(); }
+    });
+    input.addEventListener("input", render);
+  }
+
+  function setupScrollSpy() {
+    const links = document.querySelectorAll<HTMLAnchorElement>("a[data-nav]");
+    if (!links.length) return;
+    const targets = Array.from(links).map((l) => {
+      const href = l.dataset.nav ?? ""; if (!href.startsWith("/#")) return null;
+      const el = document.getElementById(href.slice(2)); return el ? { l, el } : null;
+    }).filter((t): t is { l: HTMLAnchorElement; el: HTMLElement } => t !== null);
+    if (!targets.length) return;
+
+    // Sliding indicator
+    const indicator = document.getElementById("nav-indicator");
+    const moveIndicator = (link: HTMLAnchorElement | null) => {
+      if (!indicator || !link) return;
+      const r = link.getBoundingClientRect();
+      const parent = link.closest("#nav-pill");
+      if (!parent) return;
+      const pr = parent.getBoundingClientRect();
+      indicator.style.width = `${r.width}px`;
+      indicator.style.transform = `translateX(${r.left - pr.left - 8}px)`;
+      indicator.style.opacity = "1";
+    };
+
+    let currentActive: HTMLAnchorElement | null = null;
+    links.forEach((l) => l.addEventListener("mouseenter", () => moveIndicator(l)));
+    links.forEach((l) => l.addEventListener("focus", () => moveIndicator(l)));
+    const pill = document.getElementById("nav-pill");
+    pill?.addEventListener("mouseleave", () => moveIndicator(currentActive));
+
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const id = e.target.id;
+        targets.forEach(({ l }) => {
+          const on = l.dataset.nav?.slice(2) === id;
+          l.classList.toggle("text-ink-50", on);
+          l.classList.toggle("text-ink-400", !on);
+          if (on) { currentActive = l; moveIndicator(l); }
+        });
+      }
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: 0 });
+    targets.forEach((t) => io.observe(t.el));
+    // Init: highlight first or matching
+    const initial = targets.find((t) => isActiveInit(t.l.dataset.nav ?? "", location.pathname)) ?? targets[0];
+    if (initial) { currentActive = initial.l; requestAnimationFrame(() => moveIndicator(initial.l)); }
+  }
+  function isActiveInit(href: string, cur: string) {
+    if (!href.startsWith("/#")) return cur === "/" || cur === "";
+    return false;
+  }
+
+  function setupSparkles() {
+    if (reduce()) return;
+    const cta = document.getElementById("hero-cta");
+    const layer = cta?.querySelector<HTMLElement>(".sparkle-layer");
+    if (!cta || !layer) return;
+    let raf = 0;
+    const spawn = (x: number, y: number) => {
+      const s = document.createElement("span");
+      const size = 3 + Math.random() * 4;
+      s.style.cssText = `position:absolute;left:${x}px;top:${y}px;width:${size}px;height:${size}px;border-radius:50%;background:rgba(255,255,255,0.9);box-shadow:0 0 8px 2px rgba(255,255,255,0.6);pointer-events:none;`;
+      s.animate(
+        [
+          { transform: "translate(-50%,-50%) scale(0)", opacity: 1 },
+          { transform: `translate(${(Math.random() - 0.5) * 40 - 20}px, ${-20 - Math.random() * 30}px) scale(1)`, opacity: 0 },
+        ],
+        { duration: 700 + Math.random() * 400, easing: "cubic-bezier(0.22,1,0.36,1)" },
+      ).onfinish = () => s.remove();
+      layer.appendChild(s);
+    };
+    cta.addEventListener("pointermove", (e) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const r = cta.getBoundingClientRect();
+        if (Math.random() < 0.4) spawn(e.clientX - r.left, e.clientY - r.top);
+        raf = 0;
+      });
+    });
+  }
+
+  function setupContactForm() {
+    const form = document.getElementById("contact-form") as HTMLFormElement | null;
+    const fb = document.getElementById("contact-feedback");
+    if (!form) return;
+    const show = (msg: string, ok: boolean) => {
+      if (!fb) return;
+      fb.textContent = msg; fb.classList.remove("hidden");
+      fb.className = ok
+        ? "text-sm text-sage-300 bg-sage-500/10 border border-sage-500/25 rounded-lg px-4 py-3"
+        : "text-sm text-coral bg-rose-500/10 border border-rose-500/25 rounded-lg px-4 py-3";
+    };
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const d = new FormData(form);
+      if ((d.get("company-website") ?? "").toString().trim()) { show("Mensaje enviado. ¡Gracias!", true); form.reset(); return; }
+      const name = (d.get("name") ?? "").toString().trim();
+      const email = (d.get("email") ?? "").toString().trim();
+      const msg = (d.get("message") ?? "").toString().trim();
+      if (!name || !email || !msg) { show("Por favor, completa todos los campos.", false); return; }
+      const mailto = `mailto:sebastian.malbaceda.leyva@gmail.com?subject=${encodeURIComponent(`[Portfolio] Mensaje de ${name}`)}&body=${encodeURIComponent(`Nombre: ${name}\nEmail: ${email}\n\n${msg}`)}`;
+      window.location.href = mailto;
+      show("Abriendo tu cliente de correo… Si no se abre, escríbeme a sebastian.malbaceda.leyva@gmail.com", true);
+      form.reset();
+    });
+  }
+
+  function boot() {
+    setupCursor(); setupReveal(); setupMagnetic(); setupSpotlight(); setupTilt();
+    setupRipple(); setupCounters(); setupClock(); setupParallax(); setupScrollProgress();
+    setupMobileMenu(); setupCommandPalette(); setupScrollSpy(); setupContactForm(); setupSparkles();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
+  else boot();
+  document.addEventListener("astro:after-swap", boot);
+</script>
