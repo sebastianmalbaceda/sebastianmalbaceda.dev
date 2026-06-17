@@ -8,66 +8,55 @@ const { items, class: className = "" } = Astro.props;
 const seq = [...items, ...items];
 ---
 
-<div class={`tech-slot ${className}`} role="region" aria-label="Tecnologías">
-  <div class="tech-slot-track" style={`--count:${items.length};`}>
+<div class={`tech-carousel ${className}`} role="region" aria-label="Tecnologías">
+  <div class="tech-carousel-track">
     {seq.map((item, i) => (
-      <div class="tech-slot-item" aria-hidden={i >= items.length ? "true" : undefined}>
-        <span class="font-display text-2xl md:text-4xl font-medium text-ink-100 whitespace-nowrap tracking-tight">{item}</span>
-        <span class="tech-slot-sep text-ember-500/70 select-none" aria-hidden="true">✦</span>
+      <div class="tech-carousel-item" aria-hidden={i >= items.length ? "true" : undefined}>
+        <span class="font-display text-2xl md:text-3xl font-medium text-ink-400 hover:text-ink-100 transition-colors whitespace-nowrap">{item}</span>
+        <span class="text-ember-500/70 select-none" aria-hidden="true">✦</span>
       </div>
     ))}
   </div>
   <!-- Edge fades -->
-  <div class="tech-slot-fade tech-slot-fade-top" aria-hidden="true"></div>
-  <div class="tech-slot-fade tech-slot-fade-bottom" aria-hidden="true"></div>
+  <div class="tech-carousel-fade tech-carousel-fade-left" aria-hidden="true"></div>
+  <div class="tech-carousel-fade tech-carousel-fade-right" aria-hidden="true"></div>
 </div>
 
 <style>
-  .tech-slot {
+  .tech-carousel {
     position: relative;
-    height: 96px;
     overflow: hidden;
-    mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
   }
-  .tech-slot-track {
-    display: flex;
-    flex-direction: column;
-    animation: slot-roll calc(var(--count) * 2.4s) linear infinite;
-  }
-  .tech-slot:hover .tech-slot-track {
-    animation-play-state: paused;
-  }
-  .tech-slot-item {
-    height: 96px;
+  .tech-carousel-track {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 1.25rem;
+    gap: 2.5rem;
+    width: max-content;
+    animation: carousel-roll 50s linear infinite;
+  }
+  .tech-carousel:hover .tech-carousel-track {
+    animation-play-state: paused;
+  }
+  .tech-carousel-item {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
     flex-shrink: 0;
   }
-  .tech-slot-sep {
-    font-size: 1rem;
-  }
-  @keyframes slot-roll {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-50%); }
+  @keyframes carousel-roll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .tech-slot-track { animation: none; }
-    .tech-slot {
-      height: auto;
-      mask-image: none;
-      -webkit-mask-image: none;
-    }
-    .tech-slot-track {
-      flex-direction: row;
+    .tech-carousel-track { animation: none; }
+    .tech-carousel-track {
       flex-wrap: wrap;
       justify-content: center;
-      gap: 0.5rem 1.25rem;
+      width: 100%;
+      gap: 1rem;
     }
-    .tech-slot-item { height: auto; }
-    .tech-slot-fade { display: none; }
   }
 </style>
