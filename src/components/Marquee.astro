@@ -4,89 +4,70 @@ export interface Props {
   class?: string;
 }
 const { items, class: className = "" } = Astro.props;
-// Build enough slots to populate the cylinder; repeat the source list
-const slots = [...items, ...items, ...items];
+// Duplicate the list so the track can loop seamlessly (translate -50%)
+const seq = [...items, ...items];
 ---
 
-<div class={`tech-ring-wrap ${className}`} role="region" aria-label="Tecnologías">
-  <div class="tech-ring" style={`--n:${slots.length};`}>
-    {slots.map((item, i) => (
-      <span class="tech-ring-item" style={`--i:${i};`} aria-hidden={i >= items.length ? "true" : undefined}>
-        <span class="font-display text-xl md:text-2xl font-medium whitespace-nowrap text-ink-200">{item}</span>
-        <span class="text-ember-500/70 ml-4 select-none" aria-hidden="true">✦</span>
-      </span>
+<div class={`tech-slot ${className}`} role="region" aria-label="Tecnologías">
+  <div class="tech-slot-track" style={`--count:${items.length};`}>
+    {seq.map((item, i) => (
+      <div class="tech-slot-item" aria-hidden={i >= items.length ? "true" : undefined}>
+        <span class="font-display text-2xl md:text-4xl font-medium text-ink-100 whitespace-nowrap tracking-tight">{item}</span>
+        <span class="tech-slot-sep text-ember-500/70 select-none" aria-hidden="true">✦</span>
+      </div>
     ))}
   </div>
+  <!-- Edge fades -->
+  <div class="tech-slot-fade tech-slot-fade-top" aria-hidden="true"></div>
+  <div class="tech-slot-fade tech-slot-fade-bottom" aria-hidden="true"></div>
 </div>
 
 <style>
-  .tech-ring-wrap {
+  .tech-slot {
     position: relative;
-    height: 88px;
+    height: 96px;
     overflow: hidden;
-    /* Vertical fade so items appear/disappear softly at top & bottom */
-    mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, transparent, black 22%, black 78%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, black 30%, black 70%, transparent);
   }
-  .tech-ring {
-    position: absolute;
-    inset: 0;
-    perspective: 1200px;
-    perspective-origin: 50% 50%;
-    transform-style: preserve-3d;
-    animation: ring-spin 42s linear infinite;
+  .tech-slot-track {
+    display: flex;
+    flex-direction: column;
+    animation: slot-roll calc(var(--count) * 2.4s) linear infinite;
   }
-  .tech-ring:hover {
+  .tech-slot:hover .tech-slot-track {
     animation-play-state: paused;
   }
-  .tech-ring-item {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    display: inline-flex;
+  .tech-slot-item {
+    height: 96px;
+    display: flex;
     align-items: center;
-    white-space: nowrap;
-    transform-origin: center;
-    /* Place around a vertical cylinder (axis = X). Each item is rotated then pushed out. */
-    --angle: calc(360deg / var(--n) * var(--i));
-    --radius: 180px;
-    transform:
-      translate(-50%, -50%)
-      rotateX(var(--angle))
-      translateZ(var(--radius))
-      rotateX(calc(-1 * var(--angle)));
-    transition: filter 0.4s ease;
-    filter: blur(0.4px);
+    justify-content: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
   }
-  /* The front-facing items (closest to viewer) are crisp, others blur softly */
-  .tech-ring-item:hover {
-    filter: blur(0);
+  .tech-slot-sep {
+    font-size: 1rem;
   }
-
-  @keyframes ring-spin {
-    from { transform: rotateX(0deg); }
-    to   { transform: rotateX(-360deg); }
+  @keyframes slot-roll {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-50%); }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .tech-ring { animation: none; }
-    .tech-ring-wrap {
+    .tech-slot-track { animation: none; }
+    .tech-slot {
       height: auto;
       mask-image: none;
       -webkit-mask-image: none;
     }
-    .tech-ring {
-      position: static;
-      display: flex;
+    .tech-slot-track {
+      flex-direction: row;
       flex-wrap: wrap;
       justify-content: center;
       gap: 0.5rem 1.25rem;
-      perspective: none;
     }
-    .tech-ring-item {
-      position: static;
-      transform: none;
-      filter: none;
-    }
+    .tech-slot-item { height: auto; }
+    .tech-slot-fade { display: none; }
   }
 </style>
