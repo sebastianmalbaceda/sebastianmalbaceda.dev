@@ -23,15 +23,18 @@ const seq = [...items, ...items];
   .tech-carousel {
     position: relative;
     overflow: hidden;
-    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+    /* Edge fades so items appear/disappear softly */
+    mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
   }
   .tech-carousel-track {
     display: flex;
     align-items: center;
     gap: 2.75rem;
     width: max-content;
-    animation: carousel-roll 65s linear infinite;
+    /* One full loop = travel exactly one copy width (-50%) */
+    animation: carousel-roll 42s linear infinite;
+    will-change: transform;
   }
   .tech-carousel:hover .tech-carousel-track {
     animation-play-state: paused;
@@ -50,7 +53,7 @@ const seq = [...items, ...items];
     color: #fafaf9; /* ink-50 */
   }
   .tech-carousel-sep {
-    color: rgba(249, 115, 22, 0.65);
+    color: rgba(249, 115, 22, 0.7);
     font-size: 0.9rem;
     user-select: none;
   }
@@ -59,14 +62,17 @@ const seq = [...items, ...items];
     to   { transform: translateX(-50%); }
   }
 
+  /* Reduced motion: keep it a horizontal band (scrollable), never a wrapped stack */
   @media (prefers-reduced-motion: reduce) {
-    .tech-carousel-track { animation: none; }
-    .tech-carousel-track {
-      flex-wrap: wrap;
-      justify-content: center;
-      width: 100%;
-      gap: 1rem;
+    .tech-carousel {
+      overflow-x: auto;
+      mask-image: none;
+      -webkit-mask-image: none;
+      scrollbar-width: thin;
     }
-    .tech-carousel-item { gap: 1rem; }
+    .tech-carousel-track {
+      animation: none;
+      padding: 0 2rem;
+    }
   }
 </style>

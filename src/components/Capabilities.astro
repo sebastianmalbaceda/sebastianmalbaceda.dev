@@ -15,6 +15,14 @@ const accentGrad: Record<string, string> = {
   coral: "from-rose-500/15 to-transparent",
   sky: "from-sky-500/15 to-transparent",
 };
+// RGB values for decorative shapes (CSS vars)
+const accentRgb: Record<string, string> = {
+  ember: "249,115,22",
+  gold: "251,191,36",
+  sage: "74,222,128",
+  coral: "251,113,133",
+  sky: "14,165,233",
+};
 
 // Bento spans — clean 6-col layout, no overflow:
 //   row1: [ A(3x2) | B(3) ]
@@ -49,9 +57,15 @@ const spans = [
         const delayClass = `d-${(i % 6) + 1}`;
         const featured = i === 0;
         return (
-        <div class={`bento-cell group p-6 md:p-7 reveal ${delayClass} ${spans[i] ?? "lg:col-span-2"}`} style={`transition-delay: ${i * 60}ms`}>
+        <div class={`bento-cell group p-6 md:p-7 reveal ${delayClass} ${spans[i] ?? "lg:col-span-2"}`} style={`transition-delay: ${i * 60}ms; --deco: rgba(${accentRgb[c.accent]},.40); --deco-line: rgba(${accentRgb[c.accent]},.30);`}>
           <div class={`absolute inset-0 bg-gradient-to-br ${accentGrad[c.accent]} opacity-70 pointer-events-none`} aria-hidden="true"></div>
           <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(300px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.06), transparent 60%);" aria-hidden="true"></div>
+
+          <!-- Decorative geometric shapes -->
+          <div class={`deco deco-circle ${featured ? "w-28 h-28 -top-6 -right-6" : "w-20 h-20 -top-5 -right-5"}`} aria-hidden="true"></div>
+          <div class={`deco deco-ring ${featured ? "w-16 h-16 bottom-6 right-10" : "w-12 h-12 bottom-4 right-6"}`} aria-hidden="true"></div>
+          <div class={`deco deco-dot-grid ${featured ? "w-24 h-16 bottom-8 left-8" : "w-16 h-12 bottom-6 left-6"}`} aria-hidden="true"></div>
+          <div class={`deco-plus ${featured ? "" : ""}`} style="top:1.25rem;right:1.25rem;" aria-hidden="true"></div>
 
           <div class="relative flex h-full flex-col">
             <div class="flex items-center gap-3 mb-5">

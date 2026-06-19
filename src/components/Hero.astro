@@ -47,16 +47,19 @@ const accentFor: Record<string, string> = {
 
         <h1 id="hero-headline" class="display text-[clamp(2.6rem,8.5vw,7rem)] text-ink-50 words-target">
           <span class="block">
-            {line1.split(" ").map((w) => (
-              <span class="word-mask"><span>{w}&nbsp;</span></span>
+            {line1.split(" ").map((w, i) => (
+              <span class="word-mask"><span style={`transition-delay:${0.06 + i * 0.08}s`}>{w}&nbsp;</span></span>
             ))}
           </span>
           <span class="block">
-            {line2.map((w, i) => (
-              <span class={`word-mask ${accentFor[w] ?? ""}`}>
-                <span style={`transition-delay:${0.5 + i * 0.09}s`}>{w}{i < line2.length - 1 ? "\u00A0" : ""}</span>
-              </span>
-            ))}
+            {line2.map((w, i) => {
+              const cls = accentFor[w] ?? "";
+              return (
+                <span class="word-mask">
+                  <span class={cls} style={`transition-delay:${0.5 + i * 0.09}s`}>{w}{i < line2.length - 1 ? "\u00A0" : ""}</span>
+                </span>
+              );
+            })}
           </span>
         </h1>
 

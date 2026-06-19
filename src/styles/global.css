@@ -463,6 +463,48 @@
     background: linear-gradient(to right, var(--line-strong), transparent);
   }
 
+  /* ── Decorative geometric shapes (cards) ─────────────────── */
+  .deco { position: absolute; pointer-events: none; will-change: transform; }
+  .deco-circle {
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--deco, rgba(249,115,22,.35)), transparent 72%);
+    filter: blur(2px);
+    mix-blend-mode: screen;
+    animation: decoFloat 10s ease-in-out infinite;
+  }
+  .deco-ring {
+    border-radius: 50%;
+    border: 1.5px solid var(--deco-line, rgba(255,255,255,.18));
+    animation: decoFloat 12s ease-in-out infinite reverse;
+  }
+  .deco-dot-grid {
+    background-image: radial-gradient(var(--deco-line, rgba(255,255,255,.22)) 1.2px, transparent 1.2px);
+    background-size: 14px 14px;
+    mask-image: radial-gradient(circle at center, black, transparent 72%);
+    -webkit-mask-image: radial-gradient(circle at center, black, transparent 72%);
+    opacity: .6;
+  }
+  .deco-plus {
+    width: 14px; height: 14px; position: absolute;
+    animation: decoSpin 18s linear infinite;
+  }
+  .deco-plus::before, .deco-plus::after {
+    content: ""; position: absolute; background: var(--deco-line, rgba(255,255,255,.25));
+  }
+  .deco-plus::before { left: 50%; top: 0; width: 1.5px; height: 100%; transform: translateX(-50%); }
+  .deco-plus::after  { top: 50%; left: 0; height: 1.5px; width: 100%; transform: translateY(-50%); }
+  @keyframes decoFloat {
+    0%, 100% { transform: translate(0,0) rotate(0deg); }
+    50% { transform: translate(8px,-10px) rotate(8deg); }
+  }
+  @keyframes decoSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .deco-circle, .deco-ring, .deco-plus { animation: none; }
+  }
+
   /* ── Custom cursor ───────────────────────────────────────── */
   .cursor-dot, .cursor-ring, .cursor-label {
     position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;

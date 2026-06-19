@@ -377,13 +377,6 @@
     }
     const targets = document.querySelectorAll<HTMLElement>(".words-target");
     targets.forEach((el) => {
-      // Stagger first-line words that don't already carry an inline delay.
-      el.querySelectorAll(".word-mask").forEach((m, i) => {
-        const span = m.querySelector("span") as HTMLElement | null;
-        if (span && !span.style.transitionDelay) {
-          span.style.transitionDelay = `${0.06 + i * 0.08}s`;
-        }
-      });
       requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("words-in")));
     });
   }
