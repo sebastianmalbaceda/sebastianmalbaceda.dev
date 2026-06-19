@@ -5,6 +5,7 @@ import ScrollProgress from "../components/ScrollProgress.astro";
 import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
 import Marquee from "../components/Marquee.astro";
+import Manifesto from "../components/Manifesto.astro";
 import About from "../components/About.astro";
 import Work from "../components/Work.astro";
 import Capabilities from "../components/Capabilities.astro";
@@ -24,10 +25,15 @@ import { me, allTechnologies } from "../data/site";
   <main id="main">
     <Hero />
 
-    <div class="relative border-y border-ink-800/60 py-10 bg-ink-950/60 overflow-hidden">
+    <div class="relative border-y border-ink-800/60 py-8 md:py-10 bg-ink-950/60 overflow-hidden">
+      <div class="shell-wide relative mb-5 flex items-center justify-between gap-4">
+        <p class="eyebrow">stack · en bucle</p>
+        <p class="hidden sm:block font-mono text-[10px] uppercase tracking-[0.22em] text-ink-600">{allTechnologies.length} tecnologías</p>
+      </div>
       <Marquee items={allTechnologies} />
     </div>
 
+    <Manifesto />
     <About />
     <Work />
     <Capabilities />

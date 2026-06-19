@@ -1,10 +1,10 @@
 ---
 import { journey } from "../data/site";
 
-const kindIcon: Record<string, string> = {
-  education: "🎓",
-  project: "◆",
-  milestone: "✦",
+const kindLabel: Record<string, string> = {
+  education: "educación",
+  project: "proyecto",
+  milestone: "hito",
 };
 ---
 
@@ -17,22 +17,33 @@ const kindIcon: Record<string, string> = {
       </h2>
     </div>
 
-    <ol class="relative max-w-3xl" role="list">
-      <div class="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-ember-500/40 via-ink-800 to-transparent" aria-hidden="true"></div>
+    <ol class="max-w-3xl" role="list">
       {journey.map((j, i) => {
         const delayClass = `d-${(i % 6) + 1}`;
+        const isNow = j.year.toLowerCase() === "ahora";
         return (
-        <li class={`relative pl-9 pb-10 last:pb-0 reveal ${delayClass}`} style={`transition-delay: ${i * 70}ms`}>
-          <span class="absolute left-0 top-1.5 w-[15px] h-[15px] rounded-full border-2 border-ember-500/60 bg-ink-950 flex items-center justify-center" aria-hidden="true">
-            <span class="w-1.5 h-1.5 rounded-full bg-ember-400"></span>
-          </span>
-          <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
-            <span class="font-mono text-xs text-ember-400 tracking-wider">{j.year}</span>
-            <span class="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600" aria-hidden="true">{kindIcon[j.kind]}</span>
+        <li class={`reveal ${delayClass}`} style={`transition-delay: ${i * 70}ms`}>
+          <div class="grid grid-cols-[4.5rem_1fr] sm:grid-cols-[6rem_1fr] gap-x-5 sm:gap-x-8 pb-10 last:pb-0">
+            <!-- Year column -->
+            <div class="pt-1 text-right sm:text-left">
+              <span class={`font-display text-xl sm:text-2xl tabular-nums tracking-tight ${isNow ? "text-sage-300" : "text-ink-200"}`}>{j.year}</span>
+            </div>
+
+            <!-- Timeline + content -->
+            <div class="relative pl-7 sm:pl-9 border-l border-ink-800/70">
+              <span class={`absolute left-0 top-1.5 -translate-x-1/2 w-[15px] h-[15px] rounded-full border-2 ${isNow ? "border-sage-500 bg-sage-500/30" : "border-ember-500/60"} bg-ink-950 flex items-center justify-center`} aria-hidden="true">
+                <span class={`w-1.5 h-1.5 rounded-full ${isNow ? "bg-sage-400" : "bg-ember-400"}`}></span>
+                {isNow && <span class="absolute inset-0 rounded-full bg-sage-400/40 animate-ping" aria-hidden="true"></span>}
+              </span>
+
+              <div class="mb-1.5 flex items-center gap-2">
+                <span class="text-[10px] font-mono uppercase tracking-[0.22em] text-ink-600">{kindLabel[j.kind]}</span>
+              </div>
+              <h3 class="font-display text-xl md:text-2xl text-ink-50 tracking-tight leading-snug">{j.title}</h3>
+              <p class="text-sm text-ink-500 font-mono mt-1">{j.place}</p>
+              <p class="text-ink-400 leading-relaxed mt-2.5 max-w-xl">{j.description}</p>
+            </div>
           </div>
-          <h3 class="font-display text-xl md:text-2xl text-ink-50 tracking-tight">{j.title}</h3>
-          <p class="text-sm text-ink-500 font-mono mt-0.5">{j.place}</p>
-          <p class="text-ink-400 leading-relaxed mt-2 max-w-xl">{j.description}</p>
         </li>
         );
       })}

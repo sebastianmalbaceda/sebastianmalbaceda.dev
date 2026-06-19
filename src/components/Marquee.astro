@@ -8,18 +8,15 @@ const { items, class: className = "" } = Astro.props;
 const seq = [...items, ...items];
 ---
 
-<div class={`tech-carousel ${className}`} role="region" aria-label="Tecnologías">
+<div class={`tech-carousel ${className}`} role="region" aria-label="Tecnologías que manejo">
   <div class="tech-carousel-track">
     {seq.map((item, i) => (
       <div class="tech-carousel-item" aria-hidden={i >= items.length ? "true" : undefined}>
-        <span class="font-display text-2xl md:text-3xl font-medium text-ink-400 hover:text-ink-100 transition-colors whitespace-nowrap">{item}</span>
-        <span class="text-ember-500/70 select-none" aria-hidden="true">✦</span>
+        <span class="font-display text-2xl md:text-3xl font-medium whitespace-nowrap">{item}</span>
+        <span class="tech-carousel-sep" aria-hidden="true">✦</span>
       </div>
     ))}
   </div>
-  <!-- Edge fades -->
-  <div class="tech-carousel-fade tech-carousel-fade-left" aria-hidden="true"></div>
-  <div class="tech-carousel-fade tech-carousel-fade-right" aria-hidden="true"></div>
 </div>
 
 <style>
@@ -32,9 +29,9 @@ const seq = [...items, ...items];
   .tech-carousel-track {
     display: flex;
     align-items: center;
-    gap: 2.5rem;
+    gap: 2.75rem;
     width: max-content;
-    animation: carousel-roll 50s linear infinite;
+    animation: carousel-roll 65s linear infinite;
   }
   .tech-carousel:hover .tech-carousel-track {
     animation-play-state: paused;
@@ -42,8 +39,20 @@ const seq = [...items, ...items];
   .tech-carousel-item {
     display: flex;
     align-items: center;
-    gap: 2.5rem;
+    gap: 2.75rem;
     flex-shrink: 0;
+  }
+  .tech-carousel-item span:first-child {
+    color: #d6d3d1; /* ink-300 */
+    transition: color .25s ease;
+  }
+  .tech-carousel-item:hover span:first-child {
+    color: #fafaf9; /* ink-50 */
+  }
+  .tech-carousel-sep {
+    color: rgba(249, 115, 22, 0.65);
+    font-size: 0.9rem;
+    user-select: none;
   }
   @keyframes carousel-roll {
     from { transform: translateX(0); }
@@ -58,5 +67,6 @@ const seq = [...items, ...items];
       width: 100%;
       gap: 1rem;
     }
+    .tech-carousel-item { gap: 1rem; }
   }
 </style>

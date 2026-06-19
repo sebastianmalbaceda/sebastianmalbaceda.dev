@@ -105,8 +105,8 @@
         el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
       });
     });
-    // Interior glow follow for article cards
-    document.querySelectorAll<HTMLElement>("article.group, a.group").forEach((el) => {
+    // Interior glow follow for cards / groups
+    document.querySelectorAll<HTMLElement>(".group").forEach((el) => {
       if (el.dataset.gBound === "1") return;
       el.dataset.gBound = "1";
       el.addEventListener("pointermove", (e) => {
@@ -370,6 +370,24 @@
     return false;
   }
 
+  function setupWordReveal() {
+    if (reduce()) {
+      document.querySelectorAll(".words-target").forEach((el) => el.classList.add("words-in"));
+      return;
+    }
+    const targets = document.querySelectorAll<HTMLElement>(".words-target");
+    targets.forEach((el) => {
+      // Stagger first-line words that don't already carry an inline delay.
+      el.querySelectorAll(".word-mask").forEach((m, i) => {
+        const span = m.querySelector("span") as HTMLElement | null;
+        if (span && !span.style.transitionDelay) {
+          span.style.transitionDelay = `${0.06 + i * 0.08}s`;
+        }
+      });
+      requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("words-in")));
+    });
+  }
+
   function setupSparkles() {
     if (reduce()) return;
     const cta = document.getElementById("hero-cta");
@@ -428,7 +446,8 @@
   function boot() {
     setupCursor(); setupReveal(); setupMagnetic(); setupSpotlight(); setupTilt();
     setupRipple(); setupCounters(); setupClock(); setupParallax(); setupScrollProgress();
-    setupMobileMenu(); setupCommandPalette(); setupScrollSpy(); setupContactForm(); setupSparkles();
+    setupMobileMenu(); setupCommandPalette(); setupScrollSpy(); setupContactForm();
+    setupWordReveal(); setupSparkles();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

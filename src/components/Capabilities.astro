@@ -8,6 +8,26 @@ const accentDot: Record<string, string> = {
   coral: "bg-coral",
   sky: "bg-sky-400",
 };
+const accentGrad: Record<string, string> = {
+  ember: "from-ember-500/15 to-transparent",
+  gold: "from-gold-500/15 to-transparent",
+  sage: "from-sage-500/15 to-transparent",
+  coral: "from-rose-500/15 to-transparent",
+  sky: "from-sky-500/15 to-transparent",
+};
+
+// Bento spans — clean 6-col layout, no overflow:
+//   row1: [ A(3x2) | B(3) ]
+//   row2: [ A cont. | C(3) ]
+//   row3: [ D(2) | E(2) | F(2) ]
+const spans = [
+  "lg:col-span-3 lg:row-span-2",
+  "lg:col-span-3",
+  "lg:col-span-3",
+  "lg:col-span-2",
+  "lg:col-span-2",
+  "lg:col-span-2",
+];
 ---
 
 <section id="capabilities" class="section relative" data-tint="sage">
@@ -20,28 +40,39 @@ const accentDot: Record<string, string> = {
         </h2>
       </div>
       <p class="text-ink-400 max-w-sm leading-relaxed reveal d-2">
-        Tecnologías, frameworks y métodos con los que trabajo día a día.
+        Tecnologías, frameworks y métodos con los que trabajo día a día — organizados por dominio.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 lg:gap-x-10 gap-y-10">
+    <div class="bento auto-rows-[minmax(0,1fr)] lg:auto-rows-[200px]">
       {capabilities.map((c, i) => {
         const delayClass = `d-${(i % 6) + 1}`;
+        const featured = i === 0;
         return (
-        <div class={`group reveal ${delayClass}`} style={`transition-delay: ${i * 60}ms`}>
-          <div class="flex items-center gap-3 mb-5">
-            <span class="text-2xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6" aria-hidden="true">{c.icon}</span>
-            <div>
-              <h3 class="font-display text-lg text-ink-100 group-hover:text-ink-50 transition-colors tracking-tight">{c.title}</h3>
-              <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600 mt-0.5">
-                <span class={`inline-block w-1.5 h-1.5 rounded-full ${accentDot[c.accent]} mr-1.5 align-middle`} aria-hidden="true"></span>
-                {c.summary}
-              </p>
+        <div class={`bento-cell group p-6 md:p-7 reveal ${delayClass} ${spans[i] ?? "lg:col-span-2"}`} style={`transition-delay: ${i * 60}ms`}>
+          <div class={`absolute inset-0 bg-gradient-to-br ${accentGrad[c.accent]} opacity-70 pointer-events-none`} aria-hidden="true"></div>
+          <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(300px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.06), transparent 60%);" aria-hidden="true"></div>
+
+          <div class="relative flex h-full flex-col">
+            <div class="flex items-center gap-3 mb-5">
+              <span class={`flex items-center justify-center w-10 h-10 rounded-xl border border-ink-800/70 bg-ink-950/60 text-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6 ${featured ? "w-12 h-12 text-2xl" : ""}`} aria-hidden="true">{c.icon}</span>
+              <div>
+                <h3 class={`font-display ${featured ? "text-xl md:text-2xl" : "text-lg"} text-ink-100 group-hover:text-ink-50 transition-colors tracking-tight`}>{c.title}</h3>
+                <p class="text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600 mt-0.5">
+                  <span class={`inline-block w-1.5 h-1.5 rounded-full ${accentDot[c.accent]} mr-1.5 align-middle`} aria-hidden="true"></span>
+                  {c.summary}
+                </p>
+              </div>
             </div>
+            <ul class={`flex flex-wrap gap-1.5 ${featured ? "mt-auto" : "mt-auto"}`} role="list">
+              {c.items.map((s) => <li><span class="chip">{s}</span></li>)}
+            </ul>
+            {featured && (
+              <p class="mt-5 text-sm text-ink-500 leading-relaxed max-w-md">
+                Trabajo entre sistemas de bajo y alto nivel — del assembly y C a las APIs web y los LLMs — eligiendo la herramienta correcta para cada problema.
+              </p>
+            )}
           </div>
-          <ul class="flex flex-wrap gap-1.5" role="list">
-            {c.items.map((s) => <li><span class="chip">{s}</span></li>)}
-          </ul>
         </div>
         );
       })}

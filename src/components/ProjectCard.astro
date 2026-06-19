@@ -8,61 +8,73 @@ export interface Props {
 }
 const { project, index, large = false } = Astro.props;
 
-const accentMap: Record<Project["accent"], { grad: string; chip: string }> = {
-  ember:  { grad: "from-ember-500/25 via-ember-600/10 to-transparent", chip: "bg-ember-500/10 text-ember-300 border-ember-500/25" },
-  gold:   { grad: "from-gold-500/25 via-gold-600/10 to-transparent",   chip: "bg-gold-500/10 text-gold-400 border-gold-500/25" },
-  sage:   { grad: "from-sage-500/25 via-sage-600/10 to-transparent",   chip: "bg-sage-500/10 text-sage-300 border-sage-500/25" },
-  coral:  { grad: "from-rose-500/25 via-rose-600/10 to-transparent",   chip: "bg-rose-500/10 text-coral border-rose-500/25" },
-  sky:    { grad: "from-sky-500/25 via-sky-600/10 to-transparent",     chip: "bg-sky-500/10 text-sky-300 border-sky-500/25" },
+const accentMap: Record<Project["accent"], { grad: string; chip: string; mono: string; glow: string }> = {
+  ember:  { grad: "from-ember-500/25 via-ember-600/10 to-transparent",   chip: "bg-ember-500/10 text-ember-300 border-ember-500/25", mono: "from-ember-500/30 to-ember-700/20", glow: "rgba(249,115,22,0.35)" },
+  gold:   { grad: "from-gold-500/25 via-gold-600/10 to-transparent",     chip: "bg-gold-500/10 text-gold-400 border-gold-500/25",  mono: "from-gold-500/30 to-amber-700/20", glow: "rgba(251,191,36,0.35)" },
+  sage:   { grad: "from-sage-500/25 via-sage-600/10 to-transparent",     chip: "bg-sage-500/10 text-sage-300 border-sage-500/25",  mono: "from-sage-500/30 to-emerald-700/20", glow: "rgba(74,222,128,0.35)" },
+  coral:  { grad: "from-rose-500/25 via-rose-600/10 to-transparent",     chip: "bg-rose-500/10 text-coral border-rose-500/25",     mono: "from-rose-500/30 to-rose-700/20", glow: "rgba(251,113,133,0.35)" },
+  sky:    { grad: "from-sky-500/25 via-sky-600/10 to-transparent",       chip: "bg-sky-500/10 text-sky-300 border-sky-500/25",     mono: "from-sky-500/30 to-sky-700/20", glow: "rgba(14,165,233,0.35)" },
 };
 const a = accentMap[project.accent];
 const delay = `d-${(index % 6) + 1}`;
 const idx = String(index + 1).padStart(2, "0");
+const initials = project.title.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
 ---
 
 <article
-  class={`group relative flex flex-col h-full p-5 md:p-6 rounded-2xl border border-ink-800/70 bg-ink-900/30 overflow-hidden reveal ${delay} ${large ? "lg:col-span-2" : ""} lift elev-2 hover:elev-4 hover:border-ink-700`}
+  class={`group relative flex flex-col h-full rounded-2xl border border-ink-800/70 bg-ink-900/30 overflow-hidden reveal ${delay} ${large ? "lg:col-span-2" : ""} lift elev-2 hover:elev-4 hover:border-ink-700`}
   style={`transition-delay: ${index * 70}ms`}
   data-cursor={project.github ? "Ver →" : "Detalles"}
 >
-  <div class={`absolute inset-0 bg-gradient-to-br ${a.grad} opacity-60 pointer-events-none`} aria-hidden="true"></div>
+  <!-- Monogram header -->
+  <div class={`mono-tile relative ${large ? "h-40 md:h-52" : "h-28 md:h-32"} bg-gradient-to-br ${a.mono}`}>
+    <div class="mono-grid" aria-hidden="true"></div>
+    <div class="mono-sheen" aria-hidden="true"></div>
+    <!-- Floating geometric shapes -->
+    <div class={`mono-shape mono-shape-circle ${large ? "w-24 h-24 -top-4 right-6" : "w-16 h-16 -top-3 right-4"}`} aria-hidden="true"></div>
+    <div class={`mono-shape mono-shape-ring ${large ? "w-20 h-20 bottom-2 left-10" : "w-14 h-14 bottom-1 left-6"}`} aria-hidden="true"></div>
+    <div class={`mono-shape mono-shape-square ${large ? "w-10 h-10 top-8 left-20" : "w-7 h-7 top-4 left-12"}`} aria-hidden="true"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent" aria-hidden="true"></div>
+    <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(280px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.10), transparent 60%);" aria-hidden="true"></div>
 
-  <!-- Cursor-following glow -->
-  <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(280px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.06), transparent 60%);" aria-hidden="true"></div>
-
-  <div class="relative flex items-center justify-between gap-2 mb-5">
-    <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border ${a.chip}`}>{project.tag}</span>
-    <span class="font-mono text-[10px] text-ink-600 tabular-nums">{idx} · {project.year}</span>
+    <div class="relative h-full p-5 md:p-6 flex items-end justify-between">
+      <span class="font-display text-5xl md:text-6xl text-ink-50/90 leading-none tracking-tight select-none drop-shadow-lg" aria-hidden="true">{initials}</span>
+      <div class="flex flex-col items-end gap-2">
+        <span class={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider border ${a.chip}`}>{project.tag}</span>
+        <span class="font-mono text-[10px] text-ink-300/80 tabular-nums">{idx} · {project.year}</span>
+      </div>
+    </div>
   </div>
 
-  <div class="relative flex-1">
+  <!-- Body -->
+  <div class="relative flex flex-col flex-1 p-5 md:p-6">
     <h3 class="font-display text-2xl md:text-3xl text-ink-50 mb-3 group-hover:text-white transition-colors tracking-tight">{project.title}</h3>
-    <p class="text-sm md:text-base text-ink-400 leading-relaxed mb-5">{project.description}</p>
+    <p class="text-sm md:text-base text-ink-400 leading-relaxed mb-5 flex-1">{project.description}</p>
+
+    <ul class="flex flex-wrap gap-1.5 mb-5" role="list">
+      {project.technologies.slice(0, 5).map((t) => <li><span class="chip">{t}</span></li>)}
+      {project.technologies.length > 5 && <li class="text-xs text-ink-600 font-mono self-center">+{project.technologies.length - 5}</li>}
+    </ul>
+
+    <ul class="flex items-center gap-1" role="list">
+      {project.github && (
+        <li>
+          <a href={project.github} target="_blank" rel="noopener noreferrer" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-ink-400 hover:text-ink-50 hover:bg-ink-900 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"></path></svg>
+            código
+          </a>
+        </li>
+      )}
+      {project.demo && (
+        <li>
+          <a href={project.demo} target="_blank" rel="noopener noreferrer" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-ink-400 hover:text-ink-50 hover:bg-ink-900 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>
+            demo
+          </a>
+        </li>
+      )}
+    </ul>
   </div>
-
-  <ul class="relative flex flex-wrap gap-1.5 mb-5" role="list">
-    {project.technologies.slice(0, 5).map((t) => <li><span class="chip">{t}</span></li>)}
-    {project.technologies.length > 5 && <li class="text-xs text-ink-600 font-mono self-center">+{project.technologies.length - 5}</li>}
-  </ul>
-
-  <ul class="relative flex items-center gap-1" role="list">
-    {project.github && (
-      <li>
-        <a href={project.github} target="_blank" rel="noopener noreferrer" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-ink-400 hover:text-ink-50 hover:bg-ink-900 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"></path></svg>
-          código
-        </a>
-      </li>
-    )}
-    {project.demo && (
-      <li>
-        <a href={project.demo} target="_blank" rel="noopener noreferrer" class="relative z-10 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono text-ink-400 hover:text-ink-50 hover:bg-ink-900 transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" x2="21" y1="14" y2="3"></line></svg>
-          demo
-        </a>
-      </li>
-    )}
-  </ul>
 
   {project.github && (
     <a href={project.github} target="_blank" rel="noopener noreferrer" class="absolute inset-0 z-0" aria-label={`Abrir ${project.title} en GitHub`}>
