@@ -14,27 +14,24 @@ const readingTime = Math.max(1, Math.round(post.body.split(/\s+/).length / 200))
 
 const gradients = ["from-ember-500/30 to-gold-500/10", "from-sage-500/30 to-sky-500/10", "from-coral to-rose-500/10", "from-gold-500/30 to-ember-500/10"];
 const grad = gradients[(slug.charCodeAt(0) + slug.length) % gradients.length];
-// Decorative shape variant per card for variety
-const shapeVariant = index % 3;
+// Deterministic pseudo-random so each card gets a subtly different accent.
+const rand = (seed: number) => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
+const shapeTypes = ["deco-circle", "deco-ring", "deco-dot-grid", "deco-bar"] as const;
+const st = shapeTypes[Math.floor(rand(index + 3) * shapeTypes.length)];
+const top = Math.round(rand(index + 7) * 60);
+const right = Math.round(rand(index + 13) * 55);
+let shapeStyle = "";
+let shapeCls = `deco ${st}`;
+if (st === "deco-bar") { shapeStyle = `top:${top}%;right:${right}%;width:${70 + Math.round(rand(index+19)*80)}px;`; }
+else { const size = 50 + Math.round(rand(index + 21) * 50); shapeStyle = `top:${top}%;right:${right}%;width:${size}px;height:${size}px;`; }
+const shapeFloat = rand(index + 31) > 0.5;
 ---
 
 <a href={`/blog/${slug}/`} class={`group block h-full flex flex-col p-5 md:p-6 rounded-2xl border border-ink-800/70 bg-ink-900/30 overflow-hidden reveal ${delay} lift elev-2 hover:elev-4 hover:border-ink-700`} style={`transition-delay: ${index * 80}ms`} aria-label={`Leer artículo: ${data.title}`} data-cursor="Leer">
   <div class={`relative aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br ${grad} mb-5 spotlight shrink-0`}>
     <div class="absolute inset-0 opacity-20" aria-hidden="true" style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0); background-size: 18px 18px;"></div>
-    <!-- Decorative geometric shapes -->
-    {shapeVariant === 0 && (<>
-      <div class="deco deco-circle w-24 h-24 -top-6 -right-4" style="--deco: rgba(255,255,255,.35); --deco-line: rgba(255,255,255,.30);"></div>
-      <div class="deco-plus" style="top:1rem;left:1rem;"></div>
-    </>)}
-    {shapeVariant === 1 && (<>
-      <div class="deco deco-ring w-20 h-20 bottom-2 right-4" style="--deco-line: rgba(255,255,255,.28);"></div>
-      <div class="deco deco-dot-grid w-20 h-12 top-3 left-4" style="--deco-line: rgba(255,255,255,.30);"></div>
-    </>)}
-    {shapeVariant === 2 && (<>
-      <div class="deco deco-circle w-16 h-16 top-3 right-6" style="--deco: rgba(255,255,255,.30);"></div>
-      <div class="deco deco-ring w-12 h-12 bottom-3 left-6" style="--deco-line: rgba(255,255,255,.26);"></div>
-      <div class="deco-plus" style="bottom:1rem;right:1.25rem;"></div>
-    </>)}
+    <!-- Subtle decorative accent (randomized per card) -->
+    <div class={`${shapeCls}${shapeFloat ? " deco-float" : ""}`} style={`${shapeStyle} --deco: rgba(255,255,255,.5); --deco-line: rgba(255,255,255,.16);`} aria-hidden="true"></div>
     <div class="absolute bottom-3 left-3 px-2 py-0.5 rounded bg-ink-950/60 backdrop-blur-sm border border-ink-700/50 text-[10px] font-mono uppercase tracking-wider text-ink-200">{data.category}</div>
     <div class="absolute top-3 right-3 w-8 h-8 rounded-full bg-ink-50/10 backdrop-blur-sm border border-ink-50/20 flex items-center justify-center opacity-0 -translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
       <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-ink-50"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>

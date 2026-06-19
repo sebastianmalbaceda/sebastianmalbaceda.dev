@@ -22,7 +22,7 @@ const seq = [...items, ...items];
 <style>
   .tech-carousel {
     position: relative;
-    overflow: hidden;
+    overflow: hidden; /* never show a scrollbar */
     /* Edge fades so items appear/disappear softly */
     mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
     -webkit-mask-image: linear-gradient(to right, transparent, black 7%, black 93%, transparent);
@@ -62,17 +62,11 @@ const seq = [...items, ...items];
     to   { transform: translateX(-50%); }
   }
 
-  /* Reduced motion: keep it a horizontal band (scrollable), never a wrapped stack */
+  /* Reduced motion: keep it automatic but gentler/slower — never a scroll bar.
+     A slow, steady linear translation is not jarring, so we keep the motion. */
   @media (prefers-reduced-motion: reduce) {
-    .tech-carousel {
-      overflow-x: auto;
-      mask-image: none;
-      -webkit-mask-image: none;
-      scrollbar-width: thin;
-    }
     .tech-carousel-track {
-      animation: none;
-      padding: 0 2rem;
+      animation: carousel-roll 120s linear infinite;
     }
   }
 </style>

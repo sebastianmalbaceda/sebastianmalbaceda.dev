@@ -297,7 +297,7 @@
     display: inline-block;
     overflow: hidden;
     vertical-align: bottom;
-    padding: 0.14em 0.08em 0.16em;
+    padding: 0.12em 0.14em 0.2em;
     line-height: 1;
   }
   .word-mask > span {
@@ -345,32 +345,31 @@
     mask-image: radial-gradient(circle at 70% 30%, black, transparent 75%);
     -webkit-mask-image: radial-gradient(circle at 70% 30%, black, transparent 75%);
   }
-  /* Animated sheen sweeping across the tile */
+  /* Animated sheen sweeping across the tile — subtle */
   .mono-sheen {
     position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,.14) 50%, transparent 68%);
+    background: linear-gradient(115deg, transparent 38%, rgba(255,255,255,.08) 50%, transparent 62%);
     transform: translateX(-130%);
-    animation: monoSheen 7s ease-in-out infinite;
+    animation: monoSheen 9s ease-in-out infinite;
   }
   @keyframes monoSheen {
     0%, 100% { transform: translateX(-130%); }
     55% { transform: translateX(130%); }
   }
   /* Floating geometric shapes inside the tile */
-  .mono-shape { position: absolute; pointer-events: none; will-change: transform; }
+  .mono-shape { position: absolute; pointer-events: none; opacity: .5; }
   .mono-shape-circle {
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,255,255,.22), transparent 70%);
-    mix-blend-mode: overlay;
-    animation: monoFloat 9s ease-in-out infinite;
+    background: radial-gradient(circle, rgba(255,255,255,.18), transparent 70%);
+    animation: monoFloat 11s ease-in-out infinite;
   }
   .mono-shape-ring {
-    border-radius: 50%; border: 1.5px solid rgba(255,255,255,.18);
-    animation: monoFloat 11s ease-in-out infinite reverse;
+    border-radius: 50%; border: 1px solid rgba(255,255,255,.14);
+    animation: monoFloat 13s ease-in-out infinite reverse;
   }
   .mono-shape-square {
-    border: 1.5px solid rgba(255,255,255,.16);
-    animation: monoSpin 16s linear infinite;
+    border: 1px solid rgba(255,255,255,.12);
+    animation: monoSpin 18s linear infinite;
   }
   @keyframes monoFloat {
     0%, 100% { transform: translate(0,0); }
@@ -463,46 +462,41 @@
     background: linear-gradient(to right, var(--line-strong), transparent);
   }
 
-  /* ── Decorative geometric shapes (cards) ─────────────────── */
-  .deco { position: absolute; pointer-events: none; will-change: transform; }
+  /* ── Decorative geometric shapes (cards) ───────────────────
+     Subtle, refined background accents. Kept low-contrast so they read
+     as texture, never as loud graphics. Positions/sizes set inline per card. */
+  .deco { position: absolute; pointer-events: none; }
   .deco-circle {
     border-radius: 50%;
-    background: radial-gradient(circle, var(--deco, rgba(249,115,22,.35)), transparent 72%);
-    filter: blur(2px);
-    mix-blend-mode: screen;
-    animation: decoFloat 10s ease-in-out infinite;
+    background: radial-gradient(circle, var(--deco, rgba(249,115,22,.55)), transparent 70%);
+    filter: blur(6px);
+    opacity: .35;
   }
   .deco-ring {
     border-radius: 50%;
-    border: 1.5px solid var(--deco-line, rgba(255,255,255,.18));
-    animation: decoFloat 12s ease-in-out infinite reverse;
+    border: 1px solid var(--deco-line, rgba(255,255,255,.10));
+    opacity: .5;
   }
   .deco-dot-grid {
-    background-image: radial-gradient(var(--deco-line, rgba(255,255,255,.22)) 1.2px, transparent 1.2px);
-    background-size: 14px 14px;
-    mask-image: radial-gradient(circle at center, black, transparent 72%);
-    -webkit-mask-image: radial-gradient(circle at center, black, transparent 72%);
+    background-image: radial-gradient(var(--deco-line, rgba(255,255,255,.16)) 1px, transparent 1px);
+    background-size: 12px 12px;
+    mask-image: radial-gradient(circle at center, black, transparent 75%);
+    -webkit-mask-image: radial-gradient(circle at center, black, transparent 75%);
+    opacity: .4;
+  }
+  .deco-bar {
+    height: 1px; border-radius: 1px;
+    background: linear-gradient(to right, transparent, var(--deco-line, rgba(255,255,255,.14)), transparent);
     opacity: .6;
   }
-  .deco-plus {
-    width: 14px; height: 14px; position: absolute;
-    animation: decoSpin 18s linear infinite;
-  }
-  .deco-plus::before, .deco-plus::after {
-    content: ""; position: absolute; background: var(--deco-line, rgba(255,255,255,.25));
-  }
-  .deco-plus::before { left: 50%; top: 0; width: 1.5px; height: 100%; transform: translateX(-50%); }
-  .deco-plus::after  { top: 50%; left: 0; height: 1.5px; width: 100%; transform: translateY(-50%); }
-  @keyframes decoFloat {
-    0%, 100% { transform: translate(0,0) rotate(0deg); }
-    50% { transform: translate(8px,-10px) rotate(8deg); }
-  }
-  @keyframes decoSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+  /* Gentle, slow drift — never distracting */
+  .deco-float { animation: decoDrift 14s ease-in-out infinite; }
+  @keyframes decoDrift {
+    0%, 100% { transform: translate(0,0); }
+    50% { transform: translate(6px,-6px); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .deco-circle, .deco-ring, .deco-plus { animation: none; }
+    .deco-float { animation: none; }
   }
 
   /* ── Custom cursor ───────────────────────────────────────── */

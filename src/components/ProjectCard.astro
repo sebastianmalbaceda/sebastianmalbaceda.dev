@@ -19,6 +19,15 @@ const a = accentMap[project.accent];
 const delay = `d-${(index % 6) + 1}`;
 const idx = String(index + 1).padStart(2, "0");
 const initials = project.title.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpperCase() ?? "").join("");
+
+// Deterministic pseudo-random for a subtle, varied accent per card.
+const rand = (seed: number) => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
+const monoShapeTypes = ["mono-shape-circle", "mono-shape-ring"] as const;
+const mShape = monoShapeTypes[Math.floor(rand(index + 5) * monoShapeTypes.length)];
+const mTop = Math.round(rand(index + 9) * 55) - 5;
+const mRight = Math.round(rand(index + 17) * 50);
+const mSize = (large ? 70 : 48) + Math.round(rand(index + 23) * (large ? 60 : 36));
+const mStyle = `top:${mTop}%;right:${mRight}%;width:${mSize}px;height:${mSize}px;`;
 ---
 
 <article
@@ -30,10 +39,8 @@ const initials = project.title.split(/\s+/).slice(0, 2).map((w) => w[0]?.toUpper
   <div class={`mono-tile relative ${large ? "h-40 md:h-52" : "h-28 md:h-32"} bg-gradient-to-br ${a.mono}`}>
     <div class="mono-grid" aria-hidden="true"></div>
     <div class="mono-sheen" aria-hidden="true"></div>
-    <!-- Floating geometric shapes -->
-    <div class={`mono-shape mono-shape-circle ${large ? "w-24 h-24 -top-4 right-6" : "w-16 h-16 -top-3 right-4"}`} aria-hidden="true"></div>
-    <div class={`mono-shape mono-shape-ring ${large ? "w-20 h-20 bottom-2 left-10" : "w-14 h-14 bottom-1 left-6"}`} aria-hidden="true"></div>
-    <div class={`mono-shape mono-shape-square ${large ? "w-10 h-10 top-8 left-20" : "w-7 h-7 top-4 left-12"}`} aria-hidden="true"></div>
+    <!-- Subtle accent shape (randomized per card) -->
+    <div class={`mono-shape ${mShape}`} style={mStyle} aria-hidden="true"></div>
     <div class="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/40 to-transparent" aria-hidden="true"></div>
     <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(280px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.10), transparent 60%);" aria-hidden="true"></div>
 

@@ -36,6 +36,26 @@ const spans = [
   "lg:col-span-2",
   "lg:col-span-2",
 ];
+
+// Deterministic pseudo-random per index so decorations look organic but stable.
+const rand = (seed: number) => {
+  const x = Math.sin(seed * 9301 + 49297) * 233280;
+  return x - Math.floor(x); // 0..1
+};
+// One subtle accent shape per cell: type, position, size chosen from the seed.
+const shapeTypes = ["deco-circle", "deco-ring", "deco-dot-grid", "deco-bar"] as const;
+type Shape = { cls: string; style: string; float: boolean };
+const shapeFor = (i: number, featured: boolean): Shape => {
+  const t = shapeTypes[Math.floor(rand(i + 1) * shapeTypes.length)];
+  const top = Math.round(rand(i + 7) * 60);            // %
+  const right = Math.round(rand(i + 13) * 55);          // %
+  const size = (featured ? 90 : 56) + Math.round(rand(i + 21) * (featured ? 70 : 44));
+  if (t === "deco-bar") {
+    const w = 60 + Math.round(rand(i + 33) * 90);
+    return { cls: "deco deco-bar", style: `top:${top}%;right:${right}%;width:${w}px;`, float: false };
+  }
+  return { cls: `deco ${t}`, style: `top:${top}%;right:${right}%;width:${size}px;height:${size}px;`, float: rand(i + 41) > 0.5 };
+};
 ---
 
 <section id="capabilities" class="section relative" data-tint="sage">
@@ -56,16 +76,14 @@ const spans = [
       {capabilities.map((c, i) => {
         const delayClass = `d-${(i % 6) + 1}`;
         const featured = i === 0;
+        const sh = shapeFor(i, featured);
         return (
-        <div class={`bento-cell group p-6 md:p-7 reveal ${delayClass} ${spans[i] ?? "lg:col-span-2"}`} style={`transition-delay: ${i * 60}ms; --deco: rgba(${accentRgb[c.accent]},.40); --deco-line: rgba(${accentRgb[c.accent]},.30);`}>
+        <div class={`bento-cell group p-6 md:p-7 reveal ${delayClass} ${spans[i] ?? "lg:col-span-2"}`} style={`transition-delay: ${i * 60}ms; --deco: rgba(${accentRgb[c.accent]},.55); --deco-line: rgba(${accentRgb[c.accent]},.28);`}>
           <div class={`absolute inset-0 bg-gradient-to-br ${accentGrad[c.accent]} opacity-70 pointer-events-none`} aria-hidden="true"></div>
           <div class="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500" style="background: radial-gradient(300px circle at var(--cx, 50%) var(--cy, 50%), rgba(255,255,255,0.06), transparent 60%);" aria-hidden="true"></div>
 
-          <!-- Decorative geometric shapes -->
-          <div class={`deco deco-circle ${featured ? "w-28 h-28 -top-6 -right-6" : "w-20 h-20 -top-5 -right-5"}`} aria-hidden="true"></div>
-          <div class={`deco deco-ring ${featured ? "w-16 h-16 bottom-6 right-10" : "w-12 h-12 bottom-4 right-6"}`} aria-hidden="true"></div>
-          <div class={`deco deco-dot-grid ${featured ? "w-24 h-16 bottom-8 left-8" : "w-16 h-12 bottom-6 left-6"}`} aria-hidden="true"></div>
-          <div class={`deco-plus ${featured ? "" : ""}`} style="top:1.25rem;right:1.25rem;" aria-hidden="true"></div>
+          <!-- Subtle decorative accent (randomized per card) -->
+          <div class={`${sh.cls}${sh.float ? " deco-float" : ""}`} style={sh.style} aria-hidden="true"></div>
 
           <div class="relative flex h-full flex-col">
             <div class="flex items-center gap-3 mb-5">

@@ -4,18 +4,20 @@ export interface Props {
   class?: string;
 }
 const { size = 28, class: className = "" } = Astro.props;
+// Unique id per instance so multiple logos don't collide (valid SVG).
+const uid = "logo-" + Math.random().toString(36).slice(2, 9);
 ---
 
 <span class={`inline-flex items-center ${className}`}>
   <svg width={size} height={size} viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" class="shrink-0" aria-hidden="true">
     <defs>
-      <linearGradient id="logo-ember" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <linearGradient id={`${uid}-grad`} x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
         <stop offset="0" stop-color="#fdba74" />
         <stop offset="0.5" stop-color="#f97316" />
         <stop offset="1" stop-color="#fbbf24" />
       </linearGradient>
     </defs>
-    <rect x="2" y="2" width="36" height="36" rx="11" fill="#0a0908" stroke="url(#logo-ember)" stroke-width="1.5" />
-    <path d="M13 28V12h2.4l4.8 9.6L25 12h2.4v16h-2.2V16.2L20.6 25h-1l-4.6-8.8V28H13z" fill="url(#logo-ember)" />
+    <rect x="2" y="2" width="36" height="36" rx="11" fill="#0a0908" stroke={`url(#${uid}-grad)`} stroke-width="1.5" />
+    <path d="M13 28V12h2.4l4.8 9.6L25 12h2.4v16h-2.2V16.2L20.6 25h-1l-4.6-8.8V28H13z" fill={`url(#${uid}-grad)`} />
   </svg>
 </span>
