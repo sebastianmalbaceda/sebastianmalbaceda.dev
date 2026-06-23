@@ -58,6 +58,7 @@ const categories = [...new Set(posts.map((p) => p.data.category))];
   function setupCategoryFilter() {
     const buttons = document.querySelectorAll<HTMLButtonElement>("#blog-categories button[data-category]");
     const posts = document.querySelectorAll<HTMLElement>("#blog-posts [data-category]");
+    if (!buttons.length) return;
     const filter = (cat: string) => {
       buttons.forEach((b) => {
         const on = b.dataset.category === cat;
@@ -70,15 +71,21 @@ const categories = [...new Set(posts.map((p) => p.data.category))];
     };
     const params = new URLSearchParams(window.location.search);
     filter(params.get("category") || "all");
-    buttons.forEach((b) => b.addEventListener("click", () => {
-      const cat = b.dataset.category || "all";
-      const url = new URL(window.location.href);
-      if (cat === "all") url.searchParams.delete("category"); else url.searchParams.set("category", cat);
-      window.history.pushState({}, "", url);
-      filter(cat);
-    }));
-    window.addEventListener("popstate", () => filter(new URLSearchParams(window.location.search).get("category") || "all"));
+    buttons.forEach((b) => {
+      if (b.dataset.bfBound === "1") return;
+      b.dataset.bfBound = "1";
+      b.addEventListener("click", () => {
+        const cat = b.dataset.category || "all";
+        const url = new URL(window.location.href);
+        if (cat === "all") url.searchParams.delete("category"); else url.searchParams.set("category", cat);
+        window.history.pushState({}, "", url);
+        filter(cat);
+      });
+    });
+    window.addEventListener("popstate", () => filter(new URLSearchParams(window.location.search).get("category") || "all"), { once: true });
   }
-  setupCategoryFilter();
-  document.addEventListener("astro:after-swap", setupCategoryFilter);
+  // `astro:page-load` fires on the initial load and after every view transition.
+  document.addEventListener("astro:page-load", () => {
+    if (document.getElementById("blog-categories")) setupCategoryFilter();
+  });
 </script>

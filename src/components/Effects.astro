@@ -1,5 +1,8 @@
 ---
-// All client-side effects, single source of truth:
+// All client-side effects, single source of truth.
+// View-transition safe: global listeners are bound ONCE, per-page DOM is
+// re-bound on every `astro:page-load` (initial load + after each swap).
+//
 //  - Custom cursor (dot + ring + label)
 //  - Reveal on scroll (staggered)
 //  - Magnetic CTAs
@@ -10,7 +13,14 @@
 //  - Live clock [data-clock]
 //  - Mouse parallax [data-parallax]
 //  - Section-tint shift [data-tint]
-//  - Re-init on view transitions
+//  - Scroll progress + back-to-top
+//  - Mobile menu
+//  - Command palette (⌘K)
+//  - Scroll-spy nav with sliding indicator
+//  - Word-mask headline reveal
+//  - Hero CTA sparkles
+//  - Contact form (mailto + honeypot)
+//  - Blog: copy-code buttons, reading progress, TOC scroll-spy
 ---
 
 <div id="cursor-dot" class="cursor-dot" aria-hidden="true"></div>
@@ -21,27 +31,34 @@
   const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = () => matchMedia("(pointer:fine)").matches;
 
-  function setupCursor() {
+  // ─── Shared, view-transition-aware refs ────────────────────────────
+  // Global listeners read from this object; per-page binding refreshes it.
+  const refs: {
+    dot: HTMLElement | null;
+    ring: HTMLElement | null;
+    label: HTMLElement | null;
+    scrollBar: HTMLElement | null;
+    backToTop: HTMLElement | null;
+    parallaxEls: HTMLElement[];
+    cursor: { mx: number; my: number; rx: number; ry: number; lx: number; ly: number };
+    parallax: { mx: number; my: number; rx: number; ry: number; raf: number };
+    cursorRaf: number;
+  } = {
+    dot: null, ring: null, label: null, scrollBar: null, backToTop: null,
+    parallaxEls: [],
+    cursor: { mx: 0, my: 0, rx: 0, ry: 0, lx: 0, ly: 0 },
+    parallax: { mx: 0, my: 0, rx: 0, ry: 0, raf: 0 },
+    cursorRaf: 0,
+  };
+
+  // ─── GLOBAL (bound once) ───────────────────────────────────────────
+  function bindCursorGlobals() {
     if (!fine() || reduce()) return;
-    const dot = document.getElementById("cursor-dot");
-    const ring = document.getElementById("cursor-ring");
-    const label = document.getElementById("cursor-label");
-    if (!dot || !ring || !label) return;
     document.body.classList.add("has-cursor");
 
-    let mx = 0, my = 0, rx = 0, ry = 0, lx = 0, ly = 0;
     const onMove = (e: MouseEvent) => {
-      mx = e.clientX; my = e.clientY;
-      dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
-    };
-    const loop = () => {
-      rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
-      ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
-      const show = label.classList.contains("show");
-      const tx = mx, ty = show ? my - 30 : my;
-      lx += (tx - lx) * 0.12; ly += (ty - ly) * 0.12;
-      label.style.transform = `translate(${lx}px, ${ly}px) translate(-50%, -50%)`;
-      requestAnimationFrame(loop);
+      refs.cursor.mx = e.clientX; refs.cursor.my = e.clientY;
+      if (refs.dot) refs.dot.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
     };
     const find = (el: Element | null) => {
       const t = el?.closest<HTMLElement>("[data-cursor], a, button, [role='button'], .magnetic, input, textarea, label");
@@ -51,24 +68,196 @@
       if (t.matches("a, button, [role='button'], .magnetic")) v = t.tagName === "A" && t.hasAttribute("target") ? "view" : "hover";
       return { t, text, v };
     };
+    const loop = () => {
+      const { mx, my } = refs.cursor;
+      refs.cursor.rx += (mx - refs.cursor.rx) * 0.18;
+      refs.cursor.ry += (my - refs.cursor.ry) * 0.18;
+      if (refs.ring) refs.ring.style.transform = `translate(${refs.cursor.rx}px, ${refs.cursor.ry}px) translate(-50%, -50%)`;
+      const label = refs.label;
+      if (label) {
+        const show = label.classList.contains("show");
+        const tx = mx, ty = show ? my - 30 : my;
+        refs.cursor.lx += (tx - refs.cursor.lx) * 0.12;
+        refs.cursor.ly += (ty - refs.cursor.ly) * 0.12;
+        label.style.transform = `translate(${refs.cursor.lx}px, ${refs.cursor.ly}px) translate(-50%, -50%)`;
+      }
+      refs.cursorRaf = requestAnimationFrame(loop);
+    };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseover", (e) => {
+      const ring = refs.ring, label = refs.label;
+      if (!ring) return;
       const f = find(e.target as Element);
       if (f) {
         ring.classList.toggle("hover", f.v === "hover");
         ring.classList.toggle("view", f.v === "view");
-        if (f.text) { label.textContent = f.text; label.classList.add("show"); }
-        else label.classList.remove("show");
+        if (label) { if (f.text) { label.textContent = f.text; label.classList.add("show"); } else label.classList.remove("show"); }
       } else {
         ring.classList.remove("hover", "view");
-        label.classList.remove("show");
+        if (label) label.classList.remove("show");
       }
     });
-    document.addEventListener("mousedown", () => ring.classList.add("press"));
-    document.addEventListener("mouseup", () => ring.classList.remove("press"));
-    document.addEventListener("mouseleave", () => { ring.style.opacity = "0"; dot.style.opacity = "0"; label.style.opacity = "0"; });
-    document.addEventListener("mouseenter", () => { ring.style.opacity = "1"; dot.style.opacity = "1"; label.style.opacity = ""; });
-    loop();
+    document.addEventListener("mousedown", () => refs.ring?.classList.add("press"));
+    document.addEventListener("mouseup", () => refs.ring?.classList.remove("press"));
+    document.addEventListener("mouseleave", () => { if (refs.ring) refs.ring.style.opacity = "0"; if (refs.dot) refs.dot.style.opacity = "0"; if (refs.label) refs.label.style.opacity = "0"; });
+    document.addEventListener("mouseenter", () => { if (refs.ring) refs.ring.style.opacity = "1"; if (refs.dot) refs.dot.style.opacity = "1"; if (refs.label) refs.label.style.opacity = ""; });
+    refs.cursorRaf = requestAnimationFrame(loop);
+  }
+
+  function bindParallaxGlobals() {
+    if (reduce()) return;
+    const onMove = (e: MouseEvent) => {
+      refs.parallax.mx = (e.clientX / window.innerWidth - 0.5) * 2;
+      refs.parallax.my = (e.clientY / window.innerHeight - 0.5) * 2;
+      if (!refs.parallax.raf) refs.parallax.raf = requestAnimationFrame(loop);
+    };
+    const loop = () => {
+      refs.parallax.rx += (refs.parallax.mx - refs.parallax.rx) * 0.08;
+      refs.parallax.ry += (refs.parallax.my - refs.parallax.ry) * 0.08;
+      for (const el of refs.parallaxEls) {
+        const s = parseFloat(el.dataset.parallax ?? "20");
+        el.style.setProperty("--px", `${refs.parallax.rx * s}px`);
+        el.style.setProperty("--py", `${refs.parallax.ry * s}px`);
+      }
+      if (Math.abs(refs.parallax.mx - refs.parallax.rx) > 0.001 || Math.abs(refs.parallax.my - refs.parallax.ry) > 0.001)
+        refs.parallax.raf = requestAnimationFrame(loop);
+      else refs.parallax.raf = 0;
+    };
+    document.addEventListener("mousemove", onMove);
+  }
+
+  function bindScrollProgressGlobals() {
+    let ticking = false;
+    const update = () => {
+      const bar = refs.scrollBar, top = refs.backToTop;
+      if (bar) {
+        const h = document.documentElement;
+        const ratio = (h.scrollHeight - h.clientHeight) > 0 ? h.scrollTop / (h.scrollHeight - h.clientHeight) : 0;
+        bar.style.transform = `scaleX(${ratio})`;
+        bar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+      }
+      if (top) {
+        const h = document.documentElement;
+        const ratio = (h.scrollHeight - h.clientHeight) > 0 ? h.scrollTop / (h.scrollHeight - h.clientHeight) : 0;
+        top.classList.toggle("opacity-0", ratio < 0.04);
+        top.classList.toggle("translate-y-4", ratio < 0.04);
+        top.classList.toggle("pointer-events-none", ratio < 0.04);
+      }
+      ticking = false;
+    };
+    window.addEventListener("scroll", () => { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
+    update();
+  }
+
+  function bindCmdGlobals() {
+    const email = "sebastian.malbaceda.leyva@gmail.com";
+    const vcard = () => {
+      const blob = new Blob(["BEGIN:VCARD\r\nVERSION:3.0\r\nN:Malbaceda Leyva;Sebastián;;;\r\nFN:Sebastián Malbaceda Leyva\r\nTITLE:Estudiante de Ingeniería Informática\r\nORG:Universitat Autònoma de Barcelona\r\nEMAIL;TYPE=INTERNET:" + email + "\r\nURL:https://sebastianmalbaceda.dev\r\nEND:VCARD\r\n"], { type: "text/vcard" });
+      const url = URL.createObjectURL(blob); const a = document.createElement("a");
+      a.href = url; a.download = "sebastian-malbaceda.vcf"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    };
+
+    type Cmd = { label: string; hint?: string; group: string; action: () => void };
+    const cmds: Cmd[] = [
+      { label: "Ir a Inicio", group: "Navegación", action: () => location.href = "/" },
+      { label: "Ir a Sobre mí", group: "Navegación", action: () => location.href = "/#about" },
+      { label: "Ir a Proyectos", group: "Navegación", action: () => location.href = "/#work" },
+      { label: "Ir a Capacidades", group: "Navegación", action: () => location.href = "/#capabilities" },
+      { label: "Ir a Trayectoria", group: "Navegación", action: () => location.href = "/#journey" },
+      { label: "Ir a Ahora", group: "Navegación", action: () => location.href = "/#now" },
+      { label: "Ir a Escritos", group: "Navegación", action: () => location.href = "/#writing" },
+      { label: "Ir a Contacto", group: "Navegación", action: () => location.href = "/#contact" },
+      { label: "Abrir GitHub", hint: "@sebastianmalbaceda", group: "Social", action: () => window.open("https://github.com/sebastianmalbaceda", "_blank", "noopener") },
+      { label: "Abrir LinkedIn", group: "Social", action: () => window.open("https://www.linkedin.com/in/sebastiánmalbaceda/", "_blank", "noopener") },
+      { label: "Copiar email", hint: email, group: "Acciones", action: () => navigator.clipboard.writeText(email) },
+      { label: "Escribir email", group: "Acciones", action: () => location.href = `mailto:${email}` },
+      { label: "Descargar vCard", hint: "Contacto .vcf", group: "Acciones", action: vcard },
+    ];
+
+    let active = 0; let filtered: Cmd[] = cmds;
+    const get = () => ({
+      palette: document.getElementById("cmd-palette"),
+      input: document.getElementById("cmd-input") as HTMLInputElement | null,
+      results: document.getElementById("cmd-results"),
+    });
+    const render = () => {
+      const { input, results } = get(); if (!input || !results) return;
+      const q = input.value.toLowerCase().trim();
+      filtered = q ? cmds.filter((c) => (c.label + " " + c.group + " " + (c.hint ?? "")).toLowerCase().includes(q)) : cmds;
+      active = 0; results.innerHTML = "";
+      const groups = new Map<string, Cmd[]>();
+      filtered.forEach((c) => { if (!groups.has(c.group)) groups.set(c.group, []); groups.get(c.group)!.push(c); });
+      for (const [group, items] of groups) {
+        const h = document.createElement("li");
+        h.className = "px-2 pt-3 pb-1 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600";
+        h.textContent = group; results.appendChild(h);
+        items.forEach((cmd) => {
+          const idx = filtered.indexOf(cmd);
+          const li = document.createElement("li");
+          li.setAttribute("role", "option"); li.dataset.index = String(idx);
+          li.className = "px-3 py-2.5 rounded-lg cursor-pointer flex items-center justify-between gap-3 transition-colors aria-selected:bg-ink-800/70";
+          li.innerHTML = `<div class="flex flex-col"><span class="text-sm text-ink-100">${cmd.label}</span>${cmd.hint ? `<span class="text-[11px] text-ink-500">${cmd.hint}</span>` : ""}</div>`;
+          li.addEventListener("click", () => { cmd.action(); close(); });
+          li.addEventListener("mouseenter", () => { active = idx; update(); });
+          results.appendChild(li);
+        });
+      }
+      update();
+    };
+    const update = () => {
+      const { results } = get(); if (!results) return;
+      results.querySelectorAll<HTMLElement>("[role='option']").forEach((el, i) => {
+        if (i === active) { el.setAttribute("aria-selected", "true"); el.scrollIntoView({ block: "nearest" }); }
+        else el.removeAttribute("aria-selected");
+      });
+    };
+    const open = () => {
+      const { palette, input } = get(); if (!palette || !input) return;
+      palette.classList.remove("hidden"); palette.classList.add("flex");
+      document.body.style.overflow = "hidden"; input.value = ""; render();
+      requestAnimationFrame(() => input.focus());
+    };
+    const close = () => {
+      const { palette } = get(); if (!palette) return;
+      palette.classList.add("hidden"); palette.classList.remove("flex");
+      document.body.style.overflow = "";
+    };
+
+    document.addEventListener("keydown", (e) => {
+      const { palette } = get(); if (!palette) return;
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); palette.classList.contains("hidden") ? open() : close(); return; }
+      if (e.key === "Escape" && !palette.classList.contains("hidden")) { close(); return; }
+      if (palette.classList.contains("hidden")) return;
+      if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, filtered.length - 1); update(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); update(); }
+      else if (e.key === "Enter") { e.preventDefault(); filtered[active]?.action(); close(); }
+    });
+
+    // Expose for per-page wiring of trigger/backdrop/input listeners.
+    (window as any).__cmd = { open, close, render };
+  }
+
+  let globalsBound = false;
+  function bindGlobals() {
+    if (globalsBound) return;
+    globalsBound = true;
+    bindCursorGlobals();
+    bindParallaxGlobals();
+    bindScrollProgressGlobals();
+    bindCmdGlobals();
+  }
+
+  // ─── PER-PAGE DOM (re-bound on every page-load) ────────────────────
+  function refreshRefs() {
+    refs.dot = document.getElementById("cursor-dot");
+    refs.ring = document.getElementById("cursor-ring");
+    refs.label = document.getElementById("cursor-label");
+    refs.scrollBar = document.getElementById("scroll-progress");
+    refs.backToTop = document.getElementById("back-to-top");
+    refs.parallaxEls = Array.from(document.querySelectorAll<HTMLElement>("[data-parallax]"));
+    if (refs.backToTop) {
+      refs.backToTop.onclick = () => window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }
 
   function setupReveal() {
@@ -105,7 +294,6 @@
         el.style.setProperty("--my", `${((e.clientY - r.top) / r.height) * 100}%`);
       });
     });
-    // Interior glow follow for cards / groups
     document.querySelectorAll<HTMLElement>(".group").forEach((el) => {
       if (el.dataset.gBound === "1") return;
       el.dataset.gBound = "1";
@@ -170,154 +358,60 @@
     els.forEach((el) => io.observe(el));
   }
 
+  let clockInterval = 0;
   function setupClock() {
     const els = document.querySelectorAll<HTMLElement>("[data-clock]");
     if (!els.length) return;
     const update = () => {
       const t = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false });
-      els.forEach((el) => { el.textContent = t; });
+      document.querySelectorAll<HTMLElement>("[data-clock]").forEach((el) => { el.textContent = t; });
     };
     update();
-    setInterval(update, 1000);
-  }
-
-  function setupParallax() {
-    if (reduce()) return;
-    const els = document.querySelectorAll<HTMLElement>("[data-parallax]");
-    if (!els.length) return;
-    let mx = 0, my = 0, rx = 0, ry = 0, raf = 0;
-    const onMove = (e: MouseEvent) => {
-      mx = (e.clientX / window.innerWidth - 0.5) * 2; my = (e.clientY / window.innerHeight - 0.5) * 2;
-      if (!raf) raf = requestAnimationFrame(loop);
-    };
-    const loop = () => {
-      rx += (mx - rx) * 0.08; ry += (my - ry) * 0.08;
-      els.forEach((el) => {
-        const s = parseFloat(el.dataset.parallax ?? "20");
-        el.style.setProperty("--px", `${rx * s}px`);
-        el.style.setProperty("--py", `${ry * s}px`);
-      });
-      if (Math.abs(mx - rx) > 0.001 || Math.abs(my - ry) > 0.001) raf = requestAnimationFrame(loop);
-      else raf = 0;
-    };
-    document.addEventListener("mousemove", onMove);
-  }
-
-  function setupScrollProgress() {
-    const bar = document.getElementById("scroll-progress");
-    const top = document.getElementById("back-to-top");
-    if (!bar) return;
-    let ticking = false;
-    const update = () => {
-      const h = document.documentElement;
-      const ratio = (h.scrollHeight - h.clientHeight) > 0 ? h.scrollTop / (h.scrollHeight - h.clientHeight) : 0;
-      bar.style.transform = `scaleX(${ratio})`;
-      bar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
-      if (top) {
-        top.classList.toggle("opacity-0", ratio < 0.04);
-        top.classList.toggle("translate-y-4", ratio < 0.04);
-        top.classList.toggle("pointer-events-none", ratio < 0.04);
-      }
-      ticking = false;
-    };
-    window.addEventListener("scroll", () => { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
-    update();
-    top?.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+    if (!clockInterval) clockInterval = window.setInterval(update, 1000);
   }
 
   function setupMobileMenu() {
     const toggle = document.getElementById("menu-toggle");
     const menu = document.getElementById("mobile-menu");
+    const iconOpen = document.getElementById("menu-icon-open");
+    const iconClose = document.getElementById("menu-icon-close");
     if (!toggle || !menu) return;
+    if (toggle.dataset.mmBound === "1") return;
+    toggle.dataset.mmBound = "1";
     const setOpen = (open: boolean) => {
       menu.classList.toggle("hidden", !open);
       toggle.setAttribute("aria-expanded", String(open));
       document.body.style.overflow = open ? "hidden" : "";
+      iconOpen?.classList.toggle("hidden", open);
+      iconClose?.classList.toggle("hidden", !open);
     };
     toggle.addEventListener("click", () => setOpen(menu.classList.contains("hidden")));
     menu.querySelectorAll("a").forEach((a) => a.addEventListener("click", () => setOpen(false)));
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && !menu.classList.contains("hidden")) { setOpen(false); (toggle as HTMLElement).focus(); }
+      if (e.key === "Escape" && !menu.classList.contains("hidden")) { setOpen(false); toggle.focus(); }
     });
     window.matchMedia("(min-width: 768px)").addEventListener("change", (e) => { if (e.matches) setOpen(false); });
   }
 
-  function setupCommandPalette() {
-    const palette = document.getElementById("cmd-palette");
+  function setupCommandPaletteDom() {
+    const cmd = (window as any).__cmd; if (!cmd) return;
     const trigger = document.getElementById("cmd-trigger");
     const input = document.getElementById("cmd-input") as HTMLInputElement | null;
-    const results = document.getElementById("cmd-results");
     const backdrop = document.getElementById("cmd-backdrop");
-    if (!palette || !trigger || !input || !results) return;
-    const email = "sebastian.malbaceda.leyva@gmail.com";
-
-    const vcard = () => {
-      const blob = new Blob(["BEGIN:VCARD\r\nVERSION:3.0\r\nN:Malbaceda Leyva;Sebastián;;;\r\nFN:Sebastián Malbaceda Leyva\r\nTITLE:Estudiante de Ingeniería Informática\r\nORG:Universitat Autònoma de Barcelona\r\nEMAIL;TYPE=INTERNET:" + email + "\r\nURL:https://sebastianmalbaceda.dev\r\nEND:VCARD\r\n"], { type: "text/vcard" });
-      const url = URL.createObjectURL(blob); const a = document.createElement("a");
-      a.href = url; a.download = "sebastian-malbaceda.vcf"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-    };
-
-    type Cmd = { label: string; hint?: string; group: string; action: () => void };
-    const cmds: Cmd[] = [
-      { label: "Ir a Inicio", group: "Navegación", action: () => location.href = "/" },
-      { label: "Ir a Sobre mí", group: "Navegación", action: () => location.href = "/#about" },
-      { label: "Ir a Proyectos", group: "Navegación", action: () => location.href = "/#work" },
-      { label: "Ir a Capacidades", group: "Navegación", action: () => location.href = "/#capabilities" },
-      { label: "Ir a Trayectoria", group: "Navegación", action: () => location.href = "/#journey" },
-      { label: "Ir a Ahora", group: "Navegación", action: () => location.href = "/#now" },
-      { label: "Ir a Escritos", group: "Navegación", action: () => location.href = "/#writing" },
-      { label: "Ir a Contacto", group: "Navegación", action: () => location.href = "/#contact" },
-      { label: "Abrir GitHub", hint: "@sebastianmalbaceda", group: "Social", action: () => window.open("https://github.com/sebastianmalbaceda", "_blank", "noopener") },
-      { label: "Abrir LinkedIn", group: "Social", action: () => window.open("https://www.linkedin.com/in/sebastiánmalbaceda/", "_blank", "noopener") },
-      { label: "Copiar email", hint: email, group: "Acciones", action: () => navigator.clipboard.writeText(email) },
-      { label: "Escribir email", group: "Acciones", action: () => location.href = `mailto:${email}` },
-      { label: "Descargar vCard", hint: "Contacto .vcf", group: "Acciones", action: vcard },
-    ];
-
-    let active = 0; let filtered: Cmd[] = cmds;
-    const render = () => {
-      const q = input.value.toLowerCase().trim();
-      filtered = q ? cmds.filter((c) => (c.label + " " + c.group + " " + (c.hint ?? "")).toLowerCase().includes(q)) : cmds;
-      active = 0; results.innerHTML = "";
-      const groups = new Map<string, Cmd[]>();
-      filtered.forEach((c) => { if (!groups.has(c.group)) groups.set(c.group, []); groups.get(c.group)!.push(c); });
-      for (const [group, items] of groups) {
-        const h = document.createElement("li");
-        h.className = "px-2 pt-3 pb-1 text-[10px] font-mono uppercase tracking-[0.2em] text-ink-600";
-        h.textContent = group; results.appendChild(h);
-        items.forEach((cmd) => {
-          const idx = filtered.indexOf(cmd);
-          const li = document.createElement("li");
-          li.setAttribute("role", "option"); li.dataset.index = String(idx);
-          li.className = "px-3 py-2.5 rounded-lg cursor-pointer flex items-center justify-between gap-3 transition-colors aria-selected:bg-ink-800/70";
-          li.innerHTML = `<div class="flex flex-col"><span class="text-sm text-ink-100">${cmd.label}</span>${cmd.hint ? `<span class="text-[11px] text-ink-500">${cmd.hint}</span>` : ""}</div>`;
-          li.addEventListener("click", () => { cmd.action(); close(); });
-          li.addEventListener("mouseenter", () => { active = idx; update(); });
-          results.appendChild(li);
-        });
-      }
-      update();
-    };
-    const update = () => {
-      results.querySelectorAll<HTMLElement>("[role='option']").forEach((el, i) => {
-        if (i === active) { el.setAttribute("aria-selected", "true"); el.scrollIntoView({ block: "nearest" }); }
-        else el.removeAttribute("aria-selected");
-      });
-    };
-    const open = () => { palette.classList.remove("hidden"); palette.classList.add("flex"); document.body.style.overflow = "hidden"; input.value = ""; render(); requestAnimationFrame(() => input.focus()); };
-    const close = () => { palette.classList.add("hidden"); palette.classList.remove("flex"); document.body.style.overflow = ""; };
-
-    trigger.addEventListener("click", open);
-    backdrop?.addEventListener("click", close);
-    document.addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") { e.preventDefault(); palette.classList.contains("hidden") ? open() : close(); return; }
-      if (e.key === "Escape" && !palette.classList.contains("hidden")) { close(); return; }
-      if (palette.classList.contains("hidden")) return;
-      if (e.key === "ArrowDown") { e.preventDefault(); active = Math.min(active + 1, filtered.length - 1); update(); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); active = Math.max(active - 1, 0); update(); }
-      else if (e.key === "Enter") { e.preventDefault(); filtered[active]?.action(); close(); }
-    });
-    input.addEventListener("input", render);
+    const palette = document.getElementById("cmd-palette");
+    if (trigger && trigger.dataset.cpBound !== "1") {
+      trigger.dataset.cpBound = "1";
+      trigger.addEventListener("click", () => cmd.open());
+    }
+    if (backdrop && backdrop.dataset.cpBound !== "1") {
+      backdrop.dataset.cpBound = "1";
+      backdrop.addEventListener("click", () => cmd.close());
+    }
+    if (input && input.dataset.cpBound !== "1") {
+      input.dataset.cpBound = "1";
+      input.addEventListener("input", () => cmd.render());
+    }
+    void palette;
   }
 
   function setupScrollSpy() {
@@ -329,7 +423,6 @@
     }).filter((t): t is { l: HTMLAnchorElement; el: HTMLElement } => t !== null);
     if (!targets.length) return;
 
-    // Sliding indicator
     const indicator = document.getElementById("nav-indicator");
     const moveIndicator = (link: HTMLAnchorElement | null) => {
       if (!indicator || !link) return;
@@ -361,7 +454,6 @@
       }
     }, { rootMargin: "-40% 0px -55% 0px", threshold: 0 });
     targets.forEach((t) => io.observe(t.el));
-    // Init: highlight first or matching
     const initial = targets.find((t) => isActiveInit(t.l.dataset.nav ?? "", location.pathname)) ?? targets[0];
     if (initial) { currentActive = initial.l; requestAnimationFrame(() => moveIndicator(initial.l)); }
   }
@@ -386,6 +478,8 @@
     const cta = document.getElementById("hero-cta");
     const layer = cta?.querySelector<HTMLElement>(".sparkle-layer");
     if (!cta || !layer) return;
+    if (cta.dataset.sparkBound === "1") return;
+    cta.dataset.sparkBound = "1";
     let raf = 0;
     const spawn = (x: number, y: number) => {
       const s = document.createElement("span");
@@ -413,7 +507,12 @@
   function setupContactForm() {
     const form = document.getElementById("contact-form") as HTMLFormElement | null;
     const fb = document.getElementById("contact-feedback");
+    const counter = document.getElementById("message-counter");
+    const msgEl = document.getElementById("message") as HTMLTextAreaElement | null;
     if (!form) return;
+    if (form.dataset.cfBound === "1") return;
+    form.dataset.cfBound = "1";
+
     const show = (msg: string, ok: boolean) => {
       if (!fb) return;
       fb.textContent = msg; fb.classList.remove("hidden");
@@ -421,29 +520,128 @@
         ? "text-sm text-sage-300 bg-sage-500/10 border border-sage-500/25 rounded-lg px-4 py-3"
         : "text-sm text-coral bg-rose-500/10 border border-rose-500/25 rounded-lg px-4 py-3";
     };
+    if (counter && msgEl) {
+      const max = Number(msgEl.getAttribute("maxlength") ?? 2000);
+      const upd = () => { counter.textContent = `${msgEl.value.length}/${max}`; };
+      msgEl.addEventListener("input", upd); upd();
+    }
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const d = new FormData(form);
-      if ((d.get("company-website") ?? "").toString().trim()) { show("Mensaje enviado. ¡Gracias!", true); form.reset(); return; }
+      if ((d.get("company-website") ?? "").toString().trim()) { show("Mensaje enviado. ¡Gracias!", true); form.reset(); if (counter && msgEl) counter.textContent = `0/${msgEl.getAttribute("maxlength")}`; return; }
       const name = (d.get("name") ?? "").toString().trim();
       const email = (d.get("email") ?? "").toString().trim();
       const msg = (d.get("message") ?? "").toString().trim();
       if (!name || !email || !msg) { show("Por favor, completa todos los campos.", false); return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { show("El email no parece válido. Revísalo.", false); return; }
       const mailto = `mailto:sebastian.malbaceda.leyva@gmail.com?subject=${encodeURIComponent(`[Portfolio] Mensaje de ${name}`)}&body=${encodeURIComponent(`Nombre: ${name}\nEmail: ${email}\n\n${msg}`)}`;
       window.location.href = mailto;
       show("Abriendo tu cliente de correo… Si no se abre, escríbeme a sebastian.malbaceda.leyva@gmail.com", true);
       form.reset();
+      if (counter && msgEl) counter.textContent = `0/${msgEl.getAttribute("maxlength")}`;
     });
   }
 
-  function boot() {
-    setupCursor(); setupReveal(); setupMagnetic(); setupSpotlight(); setupTilt();
-    setupRipple(); setupCounters(); setupClock(); setupParallax(); setupScrollProgress();
-    setupMobileMenu(); setupCommandPalette(); setupScrollSpy(); setupContactForm();
-    setupWordReveal(); setupSparkles();
+  // ─── Blog: copy-to-clipboard on code blocks ───────────────────────
+  function setupCopyCode() {
+    const blocks = document.querySelectorAll<HTMLElement>("article pre");
+    if (!blocks.length) return;
+    blocks.forEach((pre) => {
+      if (pre.dataset.copyBound === "1") return;
+      pre.dataset.copyBound = "1";
+      pre.classList.add("group/code");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.setAttribute("aria-label", "Copiar código");
+      btn.className = "copy-code-btn absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-mono text-ink-400 bg-ink-900/80 border border-ink-800 hover:text-ink-50 hover:border-ink-700 opacity-0 group-hover/code:opacity-100 transition-all";
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span class="copy-label">copiar</span>`;
+      btn.addEventListener("click", async () => {
+        const code = pre.querySelector("code")?.textContent ?? pre.textContent ?? "";
+        try {
+          await navigator.clipboard.writeText(code);
+          btn.querySelector(".copy-label")!.textContent = "¡copiado!";
+          setTimeout(() => { const l = btn.querySelector(".copy-label"); if (l) l.textContent = "copiar"; }, 1800);
+        } catch { /* clipboard unavailable */ }
+      });
+      // pre must be positioned for the absolute button
+      const cs = getComputedStyle(pre);
+      if (cs.position === "static") pre.style.position = "relative";
+      pre.appendChild(btn);
+    });
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
-  else boot();
-  document.addEventListener("astro:after-swap", boot);
+  // ─── Blog: reading progress bar ───────────────────────────────────
+  function setupArticleProgress() {
+    const bar = document.getElementById("article-progress");
+    const article = document.querySelector<HTMLElement>("article[data-article]");
+    if (!bar || !article) return;
+    let ticking = false;
+    const update = () => {
+      const r = article.getBoundingClientRect();
+      const total = r.height - window.innerHeight;
+      const scrolled = Math.min(Math.max(-r.top, 0), Math.max(total, 1));
+      const ratio = total > 0 ? scrolled / total : 0;
+      bar.style.transform = `scaleX(${ratio})`;
+      bar.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+      ticking = false;
+    };
+    window.addEventListener("scroll", () => { if (!ticking) { requestAnimationFrame(update); ticking = true; } }, { passive: true });
+    update();
+  }
+
+  // ─── Blog: TOC scroll-spy + smooth active link ─────────────────────
+  function setupTocSpy() {
+    const links = document.querySelectorAll<HTMLAnchorElement>("#toc a[data-toc]");
+    if (!links.length) return;
+    const targets = Array.from(links).map((l) => {
+      const id = l.dataset.toc ?? ""; const el = document.getElementById(id);
+      return el ? { l, el } : null;
+    }).filter((t): t is { l: HTMLAnchorElement; el: HTMLElement } => t !== null);
+    if (!targets.length) return;
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const id = e.target.id;
+        targets.forEach(({ l }) => {
+          const on = l.dataset.toc === id;
+          l.classList.toggle("text-ink-50", on);
+          l.classList.toggle("text-ink-500", !on);
+          l.classList.toggle("border-ember-500", on);
+          l.classList.toggle("border-transparent", !on);
+        });
+      }
+    }, { rootMargin: "-20% 0px -70% 0px", threshold: 0 });
+    targets.forEach((t) => io.observe(t.el));
+  }
+
+  // ─── Boot ──────────────────────────────────────────────────────────
+  function bindDom() {
+    refreshRefs();
+    setupReveal();
+    setupMagnetic();
+    setupSpotlight();
+    setupTilt();
+    setupRipple();
+    setupCounters();
+    setupClock();
+    setupMobileMenu();
+    setupCommandPaletteDom();
+    setupScrollSpy();
+    setupWordReveal();
+    setupSparkles();
+    setupContactForm();
+    setupCopyCode();
+    setupArticleProgress();
+    setupTocSpy();
+  }
+
+  function boot() {
+    bindGlobals();
+    bindDom();
+  }
+
+  // `astro:page-load` fires on initial load AND after every view transition.
+  document.addEventListener("astro:page-load", boot);
+  if (document.readyState !== "loading") boot();
+  else document.addEventListener("DOMContentLoaded", boot, { once: true });
 </script>

@@ -5,17 +5,20 @@ Sitio web personal de **Sebastián Malbaceda Leyva** construido con
 
 ## Stack
 
-- [Astro 5](https://astro.build) — Framework principal
+- [Astro 5](https://astro.build) — Framework principal (+ View Transitions)
 - [TypeScript](https://www.typescriptlang.org/) (strict)
-- [Tailwind CSS 3](https://tailwindcss.com/) — Estilos
+- [Tailwind CSS 3](https://tailwindcss.com) — Estilos + `@tailwindcss/typography`
+- [Shiki](https://shiki.style) — Resaltado de sintaxis en el blog
 - [@astrojs/sitemap](https://docs.astro.build/en/guides/integrations-guide/sitemap/) — Sitemap automático
+- [sharp](https://sharp.pixelplumbing.com) — Generación del OG image raster (PNG) desde el SVG
 
 ## Quick start
 
 ```bash
 npm install
 npm run dev      # http://localhost:4321
-npm run build    # genera dist/
+npm run build    # genera dist/ (y regenera el OG PNG en prebuild)
+npm run og       # regenera solo el OG image
 npm run check    # type-check del proyecto
 ```
 

@@ -1,7 +1,10 @@
+import typography from '@tailwindcss/typography';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/**/*.{astro,html,js,jsx,md,mdx,ts,tsx}'],
   darkMode: 'class',
+  plugins: [typography],
   theme: {
     extend: {
       fontFamily: {
@@ -50,6 +53,9 @@ export default {
       },
       letterSpacing: {
         tightest: '-0.04em',
+      },
+      transitionDuration: {
+        400: '400ms',
       },
       animation: {
         'fade-up': 'fadeUp 0.9s cubic-bezier(0.22,1,0.36,1) forwards',
