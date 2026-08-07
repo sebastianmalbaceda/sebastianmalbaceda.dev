@@ -36,7 +36,7 @@ const mStyle = `top:${mTop}%;right:${mRight}%;width:${mSize}px;height:${mSize}px
   data-cursor={project.github ? "Ver →" : "Detalles"}
 >
   <!-- Monogram header -->
-  <div class={`mono-tile relative ${large ? "h-40 md:h-52" : "h-28 md:h-32"} bg-gradient-to-br ${a.mono}`}>
+  <div class={`mono-tile relative ${large ? "h-40 md:h-52" : "h-28 md:h-32"} bg-gradient-to-br ${a.mono} transition-transform duration-700 group-hover:scale-[1.03] group-hover:shadow-[0_16px_50px_-16px_var(--glow)] transition-shadow`} style={`--glow: ${a.glow}`}>
     <div class="mono-grid" aria-hidden="true"></div>
     <div class="mono-sheen" aria-hidden="true"></div>
     <!-- Subtle accent shape (randomized per card) -->

@@ -53,4 +53,4 @@ Actualmente estoy trabajando en:
 - Sistema de puntuación para priorizar reparaciones.
 - Versión embebida para dashcams.
 
-FixMyRoad es un proyecto open source, disponible en [GitHub](https://github.com/sebastianmalbaceda/fixmyroad).
+FixMyRoad es un proyecto open source, disponible en [GitHub](https://github.com/gabozan/Fix-My-Road).

@@ -96,7 +96,7 @@ const shapeFor = (i: number, featured: boolean): Shape => {
                 </p>
               </div>
             </div>
-            <ul class={`flex flex-wrap gap-1.5 ${featured ? "mt-auto" : "mt-auto"}`} role="list">
+            <ul class="flex flex-wrap gap-1.5 mt-auto" role="list">
               {c.items.map((s) => <li><span class="chip">{s}</span></li>)}
             </ul>
             {featured && (

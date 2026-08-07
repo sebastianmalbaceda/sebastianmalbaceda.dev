@@ -64,4 +64,4 @@ Los sensores ultrasónicos tienen problemas con superficies irregulares. Combina
 
 OrionWay se encuentra actualmente en fase de prototipado avanzado. He realizado pruebas en entornos controlados con resultados prometedores. El próximo objetivo es realizar pruebas en entornos reales en colaboración con la ONCE.
 
-Puedes seguir el progreso del proyecto en [GitHub](https://github.com/sebastianmalbaceda/orionway).
+Puedes seguir el progreso del proyecto en [GitHub](https://github.com/gabozan/Orionway).

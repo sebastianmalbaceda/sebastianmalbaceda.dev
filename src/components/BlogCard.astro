@@ -6,14 +6,14 @@ export interface Props {
   index: number;
 }
 const { post, index } = Astro.props;
-const { data, slug } = post;
+const { data, id } = post;
 const delay = `d-${(index % 6) + 1}`;
 
 const formattedDate = new Date(data.pubDate).toLocaleDateString("es-ES", { year: "numeric", month: "short", day: "numeric" });
-const readingTime = Math.max(1, Math.round(post.body.split(/\s+/).length / 200));
+const readingTime = Math.max(1, Math.round((post.body ?? "").split(/\s+/).length / 200));
 
 const gradients = ["from-ember-500/30 to-gold-500/10", "from-sage-500/30 to-sky-500/10", "from-coral to-rose-500/10", "from-gold-500/30 to-ember-500/10"];
-const grad = gradients[(slug.charCodeAt(0) + slug.length) % gradients.length];
+const grad = gradients[(id.charCodeAt(0) + id.length) % gradients.length];
 // Deterministic pseudo-random so each card gets a subtly different accent.
 const rand = (seed: number) => { const x = Math.sin(seed * 9301 + 49297) * 233280; return x - Math.floor(x); };
 const shapeTypes = ["deco-circle", "deco-ring", "deco-dot-grid", "deco-bar"] as const;
@@ -27,8 +27,8 @@ else { const size = 50 + Math.round(rand(index + 21) * 50); shapeStyle = `top:${
 const shapeFloat = rand(index + 31) > 0.5;
 ---
 
-<a href={`/blog/${slug}/`} class={`group block h-full flex flex-col p-5 md:p-6 rounded-2xl border border-ink-800/70 bg-ink-900/30 overflow-hidden reveal ${delay} lift elev-2 hover:elev-4 hover:border-ink-700`} style={`transition-delay: ${index * 80}ms`} aria-label={`Leer artículo: ${data.title}`} data-cursor="Leer">
-  <div class={`relative aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br ${grad} mb-5 spotlight shrink-0`}>
+<a href={`/blog/${id}/`} class={`group block h-full flex flex-col p-5 md:p-6 rounded-2xl border border-ink-800/70 bg-ink-900/30 overflow-hidden reveal ${delay} lift elev-2 hover:elev-4 hover:border-ink-700`} style={`transition-delay: ${index * 80}ms`} aria-label={`Leer artículo: ${data.title}`} data-cursor="Leer">
+  <div class={`relative aspect-[16/9] rounded-xl overflow-hidden bg-gradient-to-br ${grad} mb-5 spotlight shrink-0 transition-transform duration-700 group-hover:scale-[1.02]`}>
     <div class="absolute inset-0 opacity-20" aria-hidden="true" style="background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.5) 1px, transparent 0); background-size: 18px 18px;"></div>
     <!-- Subtle decorative accent (randomized per card) -->
     <div class={`${shapeCls}${shapeFloat ? " deco-float" : ""}`} style={`${shapeStyle} --deco: rgba(255,255,255,.5); --deco-line: rgba(255,255,255,.16);`} aria-hidden="true"></div>

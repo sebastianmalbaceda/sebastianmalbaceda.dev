@@ -49,7 +49,7 @@ export const projects: Project[] = [
       "Detección de baches en carreteras mediante visión por computador y deep learning. Redes convolucionales para identificar y clasificar el estado del asfalto en tiempo real desde un dispositivo móvil.",
     technologies: ["Python", "OpenCV", "PyTorch", "YOLOv5", "Deep Learning"],
     status: "completed",
-    github: "https://github.com/sebastianmalbaceda/fixmyroad",
+    github: "https://github.com/gabozan/Fix-My-Road",
     featured: true,
     year: 2024,
     tag: "Computer Vision",
@@ -62,7 +62,7 @@ export const projects: Project[] = [
       "Robot guía asistencial para personas con discapacidad visual. Integra sensores ultrasónicos, cámara de profundidad y algoritmos de navegación autónoma para detectar obstáculos y guiar con seguridad.",
     technologies: ["Python", "Robotics", "OpenCV", "Computer Vision", "IoT"],
     status: "completed",
-    github: "https://github.com/sebastianmalbaceda/orionway",
+    github: "https://github.com/gabozan/Orionway",
     featured: true,
     year: 2024,
     tag: "Robotics",
@@ -75,7 +75,7 @@ export const projects: Project[] = [
       "Videojuego 3D educativo que enseña física gravitacional. Simulación interactiva de cuerpos celestes, órbitas y fuerzas gravitatorias con fines didácticos.",
     technologies: ["C++", "Unity", "3D", "Game Dev"],
     status: "completed",
-    github: "https://github.com/sebastianmalbaceda/gravity-sphere",
+    github: "https://github.com/gabozan/Gravity-Sphere",
     featured: true,
     year: 2023,
     tag: "Game Dev",
@@ -219,7 +219,7 @@ export const allTechnologies: string[] = [...new Set(capabilities.flatMap((c) =>
 
 export const social = {
   github: "https://github.com/sebastianmalbaceda",
-  linkedin: "https://www.linkedin.com/in/sebastiánmalbaceda/",
+  linkedin: "https://www.linkedin.com/in/sebastianmalbaceda/",
   email: "sebastian.malbaceda.leyva@gmail.com",
 };
 

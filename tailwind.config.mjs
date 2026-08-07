@@ -50,6 +50,7 @@ export default {
           500: '#22c55e',
           600: '#16a34a',
         },
+        coral: '#fb7185',
       },
       letterSpacing: {
         tightest: '-0.04em',
@@ -108,5 +109,4 @@ export default {
       },
     },
   },
-  plugins: [],
 };
